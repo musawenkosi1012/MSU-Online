@@ -105,6 +105,22 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
         </div>
     );
 
+    if (error || !lesson) return (
+        <div className="edu-animate-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', gap: '1rem', textAlign: 'center' }}>
+            <div style={{ background: '#FEF2F2', padding: '1rem', borderRadius: '50%' }}>
+                <AlertCircle size={48} color="#EF4444" />
+            </div>
+            <h3 style={{ color: '#1E293B' }}>Unable to Load Lesson</h3>
+            <p style={{ color: '#64748B' }}>{error || "Lesson data could not be retrieved."}</p>
+            <button onClick={fetchLesson} style={{ padding: '0.75rem 1.5rem', background: '#4F46E5', color: '#FFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '700' }}>
+                Retry Connection
+            </button>
+            <button onClick={onBack} style={{ marginTop: '0.5rem', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', textDecoration: 'underline' }}>
+                Go Back
+            </button>
+        </div>
+    );
+
     return (
         <div className="edu-animate-in" style={{ display: 'flex', flexDirection: 'column', height: '85vh', gap: '1rem' }}>
             {/* Header */}
