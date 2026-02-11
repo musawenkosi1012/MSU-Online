@@ -1,0 +1,209 @@
+{
+  "queries": [
+    {
+      "timestamp": "2026-02-09T13:45:58.658626",
+      "query_length": 5,
+      "response_length": 55,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 187737
+    },
+    {
+      "timestamp": "2026-02-09T14:16:14.678559",
+      "query_length": 2,
+      "response_length": 2592,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 987465
+    },
+    {
+      "timestamp": "2026-02-10T02:40:42.553405",
+      "query_length": 2,
+      "response_length": 2592,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 262822
+    },
+    {
+      "timestamp": "2026-02-10T02:43:16.135779",
+      "query_length": 2,
+      "response_length": 2605,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 152467
+    },
+    {
+      "timestamp": "2026-02-10T04:35:35.080690",
+      "query_length": 2,
+      "response_length": 2592,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 328091
+    },
+    {
+      "timestamp": "2026-02-10T05:37:58.958534",
+      "query_length": 2,
+      "response_length": 2605,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 243616
+    },
+    {
+      "timestamp": "2026-02-10T09:01:03.270545",
+      "query_length": 2,
+      "response_length": 2427,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 201579
+    },
+    {
+      "timestamp": "2026-02-10T12:07:21.158269",
+      "query_length": 10,
+      "response_length": 2674,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 454279
+    },
+    {
+      "timestamp": "2026-02-10T16:22:27.356831",
+      "query_length": 2,
+      "response_length": 2563,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 420495
+    },
+    {
+      "timestamp": "2026-02-10T16:26:28.378969",
+      "query_length": 3,
+      "response_length": 2326,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 240799
+    },
+    {
+      "timestamp": "2026-02-10T18:58:21.185098",
+      "query_length": 2,
+      "response_length": 2588,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 234727
+    },
+    {
+      "timestamp": "2026-02-10T19:37:56.962128",
+      "query_length": 5,
+      "response_length": 2646,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 161090
+    },
+    {
+      "timestamp": "2026-02-11T04:27:27.510536",
+      "query_length": 9,
+      "response_length": 2504,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 188725
+    },
+    {
+      "timestamp": "2026-02-11T04:44:31.694980",
+      "query_length": 4,
+      "response_length": 2469,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 166281
+    },
+    {
+      "timestamp": "2026-02-11T09:58:59.606022",
+      "query_length": 2,
+      "response_length": 2183,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 283373
+    }
+  ],
+  "rag_retrievals": [],
+  "tool_invocations": [],
+  "mastery_updates": [],
+  "grading_results": [],
+  "response_times": [
+    187737,
+    987465,
+    262822,
+    152467,
+    328091,
+    243616,
+    201579,
+    454279,
+    420495,
+    240799,
+    234727,
+    161090,
+    188725,
+    166281,
+    283373
+  ],
+  "daily_stats": {
+    "2026-02-09": {
+      "total_queries": 2,
+      "rag_queries": 0,
+      "avg_confidence": 0.3,
+      "avg_response_time": 587601.0
+    },
+    "2026-02-10": {
+      "total_queries": 10,
+      "rag_queries": 0,
+      "avg_confidence": 0.29999999999999993,
+      "avg_response_time": 269996.5,
+      "activities": [
+        {
+          "type": "access",
+          "timestamp": "2026-02-10T10:10:16.748169"
+        },
+        {
+          "type": "access",
+          "timestamp": "2026-02-10T10:10:26.066983"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-10T12:07:21.123588"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-10T16:22:27.344909"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-10T16:26:28.374952"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-10T18:58:21.178811"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-10T19:37:56.951690"
+        }
+      ]
+    },
+    "2026-02-11": {
+      "total_queries": 3,
+      "rag_queries": 0,
+      "avg_confidence": 0.3,
+      "avg_response_time": 212793.0,
+      "activities": [
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T04:27:27.506037"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T04:44:31.689395"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T09:58:59.597905"
+        }
+      ]
+    }
+  }
+}

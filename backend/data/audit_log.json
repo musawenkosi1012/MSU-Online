@@ -1,0 +1,169 @@
+[
+  {
+    "id": 1,
+    "event": "SESSION_STARTED",
+    "user_id": "test-user-2",
+    "timestamp": "2026-02-09T11:12:20.796586",
+    "data": {
+      "session_id": "session-123",
+      "mode": "chat",
+      "course_id": "course-1",
+      "topic_id": "topic-1"
+    }
+  },
+  {
+    "id": 2,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "test-user-2",
+    "timestamp": "2026-02-09T11:12:20.798694",
+    "data": {
+      "query": "machine learning basics",
+      "domains": [
+        "edu.example.com"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 3,
+    "event": "EXERCISE_GRADED",
+    "user_id": "test-user-2",
+    "timestamp": "2026-02-09T11:12:20.799780",
+    "data": {
+      "topic_id": "topic-1",
+      "score": 85.5,
+      "question_type": "essay",
+      "affects_gpa": true
+    }
+  },
+  {
+    "id": 4,
+    "event": "MASTERY_UPDATED",
+    "user_id": "test-user-2",
+    "timestamp": "2026-02-09T11:12:20.800930",
+    "data": {
+      "topic_id": "topic-1",
+      "old_mastery": 0.6,
+      "new_mastery": 0.75,
+      "delta": 0.15
+    }
+  },
+  {
+    "id": 5,
+    "event": "HINT_USED",
+    "user_id": "test-user-2",
+    "timestamp": "2026-02-09T11:12:20.801981",
+    "data": {
+      "session_id": "session-123",
+      "topic_id": "topic-1"
+    }
+  },
+  {
+    "id": 6,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "3",
+    "timestamp": "2026-02-09T13:33:58.694991",
+    "data": {
+      "query": "love",
+      "domains": [
+        "web"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 7,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "4",
+    "timestamp": "2026-02-09T19:39:50.009568",
+    "data": {
+      "query": "The Future of Artificial Intelligence in Education",
+      "domains": [
+        "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        "https://en.wikipedia.org/wiki/Educational_technology"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 8,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "4",
+    "timestamp": "2026-02-10T01:50:01.253418",
+    "data": {
+      "query": "The Future of Artificial Intelligence in Education",
+      "domains": [
+        "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        "https://en.wikipedia.org/wiki/Educational_technology"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 9,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "3",
+    "timestamp": "2026-02-10T03:25:18.207564",
+    "data": {
+      "query": "Impact of Quantum Computing on Cryptography",
+      "domains": [
+        "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        "https://en.wikipedia.org/wiki/Educational_technology"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 10,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "3",
+    "timestamp": "2026-02-10T04:09:16.330311",
+    "data": {
+      "query": "Impact of Quantum Computing on Cryptography",
+      "domains": [
+        "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        "https://en.wikipedia.org/wiki/Educational_technology"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 11,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "3",
+    "timestamp": "2026-02-10T14:41:38.203908",
+    "data": {
+      "query": "Impact of Quantum Computing on Cryptography",
+      "domains": [
+        "https://forum.wordreference.com/threads/impact-verb-to-impact-on.3844619/"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 12,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "1",
+    "timestamp": "2026-02-10T16:44:44.158093",
+    "data": {
+      "query": "Future of AI",
+      "domains": [
+        "http://test.com"
+      ],
+      "success": true
+    }
+  },
+  {
+    "id": 13,
+    "event": "WEB_SCRAPE_USED",
+    "user_id": "1",
+    "timestamp": "2026-02-10T16:58:19.056027",
+    "data": {
+      "query": "Future of AI",
+      "domains": [
+        "http://test.com"
+      ],
+      "success": true
+    }
+  }
+]

@@ -1,0 +1,42 @@
+[
+    {
+        "id": "ia-topic-1",
+        "course_id": "course-1",
+        "title": "Topic 1: IA Foundations",
+        "type": "mcq",
+        "questions": [
+            {
+                "question": "What is the primary goal of Information Architecture?",
+                "options": [
+                    "Visual design",
+                    "Content organization",
+                    "Network security",
+                    "Database tuning"
+                ],
+                "correct": 1
+            },
+            {
+                "question": "Which of these is a core component of IA?",
+                "options": [
+                    "Search systems",
+                    "Adobe Photoshop",
+                    "React.js",
+                    "SQL Queries"
+                ],
+                "correct": 0
+            }
+        ]
+    },
+    {
+        "id": "ia-course-open",
+        "course_id": "course-1",
+        "title": "IA Course Assessment",
+        "type": "open",
+        "questions": [
+            {
+                "question": "Explain the difference between Top-down and Bottom-up Information Architecture.",
+                "reference": "Top-down IA starts with high-level categories and drills down, while Bottom-up starts with metadata and individual content items."
+            }
+        ]
+    }
+]

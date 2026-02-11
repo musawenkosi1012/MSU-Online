@@ -1,0 +1,16 @@
+{
+    "test-student-99": {
+        "general": {
+            "concepts": 0.39,
+            "skills": 0.30800000000000005,
+            "stability": 0.1,
+            "aggregate": 0.31100000000000005
+        },
+        "course-1": {
+            "concepts": 0.5,
+            "skills": 0.44,
+            "stability": 0.1,
+            "aggregate": 0.42100000000000004
+        }
+    }
+}

@@ -1,0 +1,56 @@
+[
+    {
+        "id": "ia-ex-1",
+        "course_id": "course-1",
+        "topic_id": "course-1",
+        "source": "exercise",
+        "title": "Exercise 1: IA Foundations",
+        "type": "mcq",
+        "questions": [
+            {
+                "question": "What is IA?",
+                "options": [
+                    "Design",
+                    "Org",
+                    "Sec",
+                    "DB"
+                ],
+                "correct": 1
+            }
+        ]
+    },
+    {
+        "id": "ia-final-mcq",
+        "course_id": "course-1",
+        "topic_id": "course-1",
+        "source": "final",
+        "title": "Final Exam: Part A",
+        "type": "mcq",
+        "questions": [
+            {
+                "question": "Core component of IA?",
+                "options": [
+                    "Search",
+                    "Photo",
+                    "React",
+                    "SQL"
+                ],
+                "correct": 0
+            }
+        ]
+    },
+    {
+        "id": "ia-final-open",
+        "course_id": "course-1",
+        "topic_id": "course-1",
+        "source": "final",
+        "title": "Final Exam: Part B",
+        "type": "open",
+        "questions": [
+            {
+                "question": "Explain Top-down vs Bottom-up IA.",
+                "reference": "Top-down starts with categories, Bottom-up starts with items."
+            }
+        ]
+    }
+]

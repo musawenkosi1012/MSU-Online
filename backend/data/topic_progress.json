@@ -1,0 +1,12 @@
+{
+    "test-user-001:topic-1-1-1": {
+        "user_id": "test-user-001",
+        "topic_id": "topic-1-1-1",
+        "read_progress": 1.0,
+        "exercise_attempted": true,
+        "exercise_score": 80,
+        "mastery": 0.88,
+        "completed": true,
+        "last_updated": "2026-02-09T10:59:40.586096"
+    }
+}

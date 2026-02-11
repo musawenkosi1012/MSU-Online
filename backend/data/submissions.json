@@ -1,0 +1,107 @@
+[
+    {
+        "student_id": "test-user",
+        "assessment_id": "ia-topic-1",
+        "score": 100.0,
+        "results": [
+            {
+                "question_index": 0,
+                "student_answer": 1,
+                "correct_answer": 1,
+                "is_correct": true
+            },
+            {
+                "question_index": 1,
+                "student_answer": 0,
+                "correct_answer": 0,
+                "is_correct": true
+            }
+        ],
+        "timestamp": "3234"
+    },
+    {
+        "student_id": "test-user",
+        "assessment_id": "ia-course-open",
+        "score": 70.0,
+        "results": [
+            {
+                "question_index": 0,
+                "student_answer": "Top-down is big picture, Bottom-up is about metadata.",
+                "score": 70,
+                "feedback": "First, let's understand the question: \"Explain the difference between Top-down and Bottom-up Information Architecture.\""
+            }
+        ],
+        "timestamp": "8775"
+    },
+    {
+        "student_id": "student-1",
+        "assessment_id": "ia-course-open",
+        "score": 70.0,
+        "results": [
+            {
+                "question_index": 0,
+                "student_answer": "i dont knoe",
+                "score": 70,
+                "feedback": "Additional Comments: [Any additional comments or suggestions]"
+            }
+        ],
+        "timestamp": "2950"
+    },
+    {
+        "student_id": "student-1",
+        "assessment_id": "ia-topic-1",
+        "score": 50.0,
+        "results": [
+            {
+                "question_index": 0,
+                "student_answer": 3,
+                "correct_answer": 1,
+                "is_correct": false
+            },
+            {
+                "question_index": 1,
+                "student_answer": 0,
+                "correct_answer": 0,
+                "is_correct": true
+            }
+        ],
+        "timestamp": "2181"
+    },
+    {
+        "student_id": "test-student-99",
+        "assessment_id": "ia-topic-1",
+        "score": 100.0,
+        "behavior": {
+            "latency": 45.0,
+            "hint_usage": 1
+        },
+        "results": [
+            {
+                "question_index": 0,
+                "is_correct": true
+            },
+            {
+                "question_index": 1,
+                "is_correct": true
+            }
+        ],
+        "timestamp": "2026-02-09T10:40:18.388317"
+    },
+    {
+        "student_id": "test-student-99",
+        "assessment_id": "ia-transfer-1",
+        "score": 50.0,
+        "behavior": {
+            "latency": 30.0,
+            "hint_usage": 0
+        },
+        "results": [
+            {
+                "mastery_score": 0.5,
+                "feedback": "Baseline transfer evaluation.",
+                "status": "partial"
+            }
+        ],
+        "timestamp": "2026-02-09T10:41:14.649592"
+    }
+]

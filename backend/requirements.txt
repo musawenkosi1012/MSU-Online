@@ -1,0 +1,28 @@
+fastapi>=0.109.0
+uvicorn==0.22.0
+llama-cpp-python==0.3.16
+pydantic>=2.0.0
+python-multipart==0.0.6
+pypdf==3.9.0
+beautifulsoup4==4.12.2
+firecrawl-py==1.0.0
+playwright==1.40.0
+trafilatura==1.6.0
+readability-lxml==0.8.1
+
+# RAG Dependencies
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+tiktoken>=0.5.0
+
+# Auth
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.0.0
+passlib>=1.7.4
+
+# Web Scraping / Research
+duckduckgo-search>=7.0.0
+aiohttp>=3.9.0
+
+# Database
+sqlalchemy>=1.4.0

@@ -1,0 +1,485 @@
+/* ==========================================================================
+   EDUNEXUS DESIGN SYSTEM - MSU BRANDED
+   Vibrant, Modern, High-Performance Virtual Learning Environment
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Primary Color Palette (MSU Spartan Green) */
+  --edu-indigo: #0B5E3B;
+  /* MSU Green */
+  --edu-indigo-light: #F1F8F6;
+  /* Keeping a light green tint for specific UI elements, separate from main generic BG */
+  --edu-indigo-dark: #0F3D2E;
+  /* Deep Forest Green */
+  --edu-indigo-glow: rgba(11, 94, 59, 0.3);
+  --edu-indigo-darker: #052618;
+
+  /* Neutrals */
+  --edu-slate: #1F2933;
+  /* Charcoal Text */
+  --edu-slate-light: #F3F4F6;
+  /* Light Gray Background */
+  --edu-slate-border: #9CA3AF;
+  /* Cool Gray (Borders) */
+  --edu-slate-text: #4B5563;
+  /* Slate Gray (Secondary Text) */
+
+  /* Accents & Feedback */
+  --edu-emerald: #1FA971;
+  /* Emerald Accent */
+  --edu-orange: #F2B705;
+  /* University Gold */
+  --edu-purple: #2F7F6A;
+  /* Muted Teal (Replacing Purple) */
+  --edu-red: #DC2626;
+  /* Error Red */
+  --edu-blue: #2563EB;
+  /* Info Blue */
+
+  /* Glassmorphic Tokens */
+  --edu-glass-bg: rgba(255, 255, 255, 0.65);
+  --edu-glass-border: rgba(255, 255, 255, 0.25);
+  --edu-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+
+  /* Spacing & Radii */
+  --edu-radius-lg: 1rem;
+  --edu-radius-xl: 1.5rem;
+  --edu-radius-2xl: 2.5rem;
+
+  /* Typography */
+  --edu-font-sans: 'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  --edu-font-display: 'Poppins',
+    sans-serif;
+  --edu-font-mono: 'JetBrains Mono',
+    monospace;
+}
+
+/* Base Resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--edu-font-sans);
+  background-color: var(--edu-slate-light);
+  color: var(--edu-slate);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--edu-font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* Utility Layout Classes */
+.edu-flex {
+  display: flex;
+}
+
+.edu-flex-col {
+  flex-direction: column;
+}
+
+.edu-items-center {
+  align-items: center;
+}
+
+.edu-justify-center {
+  justify-content: center;
+}
+
+.edu-justify-between {
+  justify-content: space-between;
+}
+
+.edu-gap-2 {
+  gap: 0.5rem;
+}
+
+.edu-gap-4 {
+  gap: 1rem;
+}
+
+.edu-gap-6 {
+  gap: 1.5rem;
+}
+
+.edu-p-4 {
+  padding: 1rem;
+}
+
+.edu-p-6 {
+  padding: 1.5rem;
+}
+
+.edu-p-10 {
+  padding: 2.5rem;
+}
+
+.edu-w-full {
+  width: 100%;
+}
+
+.edu-max-w-md {
+  max-width: 28rem;
+}
+
+.edu-min-h-screen {
+  min-height: 100vh;
+}
+
+.edu-relative {
+  position: relative;
+}
+
+.edu-overflow-hidden {
+  overflow: hidden;
+}
+
+/* Design Components */
+
+/* Cards */
+.edu-card {
+  background-color: #FFFFFF;
+  border-radius: var(--edu-radius-2xl);
+  border: 1px solid var(--edu-slate-border);
+  box-shadow: var(--edu-glass-shadow);
+  padding: 2.5rem;
+}
+
+.edu-glass-panel {
+  background: var(--edu-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--edu-radius-xl);
+  box-shadow: var(--edu-glass-shadow);
+}
+
+/* Typography Enhancements */
+.edu-text-center {
+  text-align: center;
+}
+
+.edu-text-slate-500 {
+  color: var(--edu-slate-text);
+}
+
+.edu-font-bold {
+  font-weight: 700;
+}
+
+.edu-font-black {
+  font-weight: 900;
+}
+
+.edu-text-2xl {
+  font-size: 1.5rem;
+}
+
+.edu-text-3xl {
+  font-size: 1.875rem;
+}
+
+.edu-tracking-tight {
+  letter-spacing: -0.05em;
+}
+
+/* Buttons */
+.edu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 800;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  width: 100%;
+}
+
+.edu-btn-primary {
+  background-color: var(--edu-indigo);
+  color: #FFFFFF;
+  box-shadow: 0 10px 15px -3px var(--edu-indigo-glow);
+}
+
+.edu-btn-primary:hover {
+  background-color: var(--edu-slate);
+  transform: translateY(-2px) rotate(-1.5deg);
+}
+
+.edu-btn-primary:active {
+  transform: scale(0.98) rotate(0deg);
+}
+
+
+.edu-btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--edu-slate-border);
+  color: var(--edu-slate-text);
+}
+
+.edu-btn-outline:hover {
+  background-color: var(--edu-slate-light);
+  border-color: var(--edu-indigo);
+  color: var(--edu-indigo);
+  transform: scale(1.02) rotate(1.5deg);
+}
+
+.edu-sidebar-item {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.edu-sidebar-item:hover {
+  transform: translateX(5px) rotate(-1deg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.edu-sidebar-item:active {
+  transform: scale(0.95) rotate(0deg);
+}
+
+
+
+/* Form Elements */
+.edu-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.edu-input-label {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--edu-slate-text);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-left: 0.25rem;
+}
+
+.edu-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.edu-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #94A3B8;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.edu-input {
+  width: 100%;
+  padding: 1rem 1.5rem 1rem 3rem;
+  background-color: var(--edu-slate-light);
+  border: 2px solid var(--edu-slate-border);
+  border-radius: 1rem;
+  font-weight: 500;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.edu-input:focus {
+  border-color: var(--edu-indigo);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 4px var(--edu-indigo-light);
+}
+
+/* Custom Decorations */
+.edu-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+}
+
+/* New: Shimmer Effect */
+.edu-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.edu-shimmer::after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(45deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0) 100%);
+  transform: rotate(45deg);
+  transition: all 0.6s ease-in-out;
+  pointer-events: none;
+}
+
+.edu-shimmer:hover::after {
+  top: 150%;
+  left: 150%;
+}
+
+
+@keyframes edu-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes edu-rotate-in {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-15deg) translateY(30px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes edu-float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(0.4deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.edu-animate-in {
+  animation: edu-fade-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.edu-rotate-in {
+  animation: edu-rotate-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Staggered entrance for the first 6 items */
+.edu-rotate-in:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.edu-rotate-in:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.edu-rotate-in:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.edu-rotate-in:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.edu-rotate-in:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.edu-rotate-in:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.edu-card-interactive {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.edu-card-interactive:hover {
+  transform: perspective(1000px) rotateY(6deg) rotateX(3deg) translateY(-12px) scale(1.03);
+  box-shadow: 0 30px 60px -15px rgba(79, 70, 229, 0.3);
+  border-color: var(--edu-indigo);
+}
+
+.edu-card-interactive .edu-icon-wrapper {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.edu-card-interactive:hover .edu-icon-wrapper {
+  transform: scale(1.15) translateZ(20px);
+}
+
+.edu-float {
+  animation: edu-float 6s ease-in-out infinite;
+}
+
+
+
+
+/* Responsive Overrides */
+@media (max-width: 640px) {
+  .edu-card {
+    padding: 1.5rem;
+    border-radius: var(--edu-radius-xl);
+  }
+}
+
+/* Typing Indicator Animation */
+@keyframes edu-typing-dots {
+  0% { opacity: 0.2; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+  100% { opacity: 0.2; transform: translateY(0); }
+}
+
+.edu-typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.edu-typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--edu-indigo);
+  border-radius: 50%;
+  animation: edu-typing-dots 1.4s infinite ease-in-out;
+}
+
+.edu-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.edu-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
