@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
   ],
   server: {
-    port: 5173,
+    port: process.env.PORT || 5173,
     strictPort: true,
     hmr: {
       overlay: false
