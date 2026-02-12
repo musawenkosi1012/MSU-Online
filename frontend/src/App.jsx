@@ -56,7 +56,7 @@ const App = () => {
   const [modelStatus, setModelStatus] = useState({ loaded: false, loading: false });
   const [isResearchMode, setIsResearchMode] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState([]); // Array of note objects [{id, title, content}]
 
   // Dynamic Data
   const [allCourses, setAllCourses] = useState([]);
@@ -74,6 +74,8 @@ const App = () => {
   const [generatedQuiz, setGeneratedQuiz] = useState(null);
   const [voiceSessionId, setVoiceSessionId] = useState(null);
   const [gradingBreakdown, setGradingBreakdown] = useState(null);
+  const [streak, setStreak] = useState(0);
+  const [activeLessonId, setActiveLessonId] = useState('py_loops_01');
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -108,24 +110,12 @@ const App = () => {
     }
   }, []);
 
-  const [streak, setStreak] = useState(0);
-
-  const logActivity = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      await fetch('http://localhost:8000/api/progress/activity', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } catch (err) { console.error("Error logging activity", err); }
-  };
-
   const fetchStreak = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch('http://localhost:8000/api/progress/streak', {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/progress/streak`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -135,10 +125,23 @@ const App = () => {
     } catch (err) { console.error("Error fetching streak", err); }
   };
 
+  const logActivity = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      await fetch(`${baseUrl}/api/progress/activity`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) { console.error("Error logging activity", err); }
+  };
+
   const fetchModelStatus = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8000/api/ai/analytics', {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/ai/analytics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) return;
@@ -150,27 +153,30 @@ const App = () => {
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8000/api/notes', {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/notes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        setNotes(data.notes ? data.notes[0] || "" : "");
+        setNotes(data.notes || []);
       }
     } catch (err) { console.error("Error fetching notes", err); }
   };
 
-  const handleSaveNotes = async () => {
+  const handleSaveNotes = async (content, title = null) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:8000/api/notes', {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      await fetch(`${baseUrl}/api/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ notes })
+        body: JSON.stringify({ notes: content, title })
       });
+      fetchNotes(); // Refresh list
     } catch (err) { console.error("Error saving notes", err); }
   };
 
@@ -179,17 +185,18 @@ const App = () => {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
       const targetCourseId = courseIdOverride || selectedCourseId;
       // Skip course specific mastery if no course selected, or use a safe check
       const masteryReq = targetCourseId
-        ? fetch(`http://localhost:8000/api/progress/course/${targetCourseId}/mastery`, { headers })
+        ? fetch(`${baseUrl}/api/progress/course/${targetCourseId}/mastery`, { headers })
         : Promise.resolve({ json: () => ({}) }); // No-op if no course
 
       const [masteryRes, gpaRes, scaleRes, breakdownRes] = await Promise.all([
         masteryReq,
-        fetch('http://localhost:8000/api/assessment/gpa', { headers }),
-        fetch('http://localhost:8000/api/assessment/gpa/scale', { headers }),
-        fetch('http://localhost:8000/api/assessment/gpa/breakdown', { headers })
+        fetch(`${baseUrl}/api/assessment/gpa`, { headers }),
+        fetch(`${baseUrl}/api/assessment/gpa/scale`, { headers }),
+        fetch(`${baseUrl}/api/assessment/gpa/breakdown`, { headers })
       ]);
 
       const mData = await masteryRes.json().catch(() => ({}));
@@ -376,11 +383,11 @@ const App = () => {
       const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
       const endpoint = isVoiceActive ? `${baseUrl}/api/voice/chat` : `${baseUrl}/api/ai/chat`;
       const body = isVoiceActive
-        ? { text: textToSend, session_id: voiceSessionId }
+        ? { text: textToSend, session_id: String(voiceSessionId) }
         : {
           message: context + textToSend,
-          course_id: selectedCourseId,
-          session_id: voiceSessionId || 'default-session'
+          course_id: String(selectedCourseId),
+          session_id: String(voiceSessionId || 'default-session')
         };
 
       const response = await fetch(endpoint, {
@@ -408,7 +415,8 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/student/exam/${selectedCourseId}?count=5`, {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/student/exam/${selectedCourseId}?count=5`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) return;
@@ -424,7 +432,8 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/assessment/${assessmentId}`, {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/assessment/${assessmentId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Failed to load assessment");
@@ -446,7 +455,8 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/assessment/final-exam/${courseId}`, {
+      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/assessment/final-exam/${courseId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -526,6 +536,7 @@ const App = () => {
             courses={enrolledCourses}
             setActiveTab={setActiveTab}
             gradingBreakdown={gradingBreakdown}
+            streak={streak}
           />
         )}
         {activeTab === 'exercises' && <ExerciseHub courses={enrolledCourses} onStartAssessment={launchAssessment} aiLoading={aiLoading} />}
@@ -543,7 +554,7 @@ const App = () => {
         {activeTab === 'learning_hub' && (
           <LearningHub
             onOpenTextbook={(id) => { if (id) setSelectedCourseId(id); setActiveTab('electronic_textbook'); }}
-            onOpenCodingLab={() => setActiveTab('coding_lab')}
+            onOpenCodingLab={(id) => { if (id) setActiveLessonId(id); setActiveTab('coding_lab'); }}
             repository={repository}
             courses={enrolledCourses}
           />
@@ -559,7 +570,7 @@ const App = () => {
 
         {activeTab === 'coding_lab' && (
           <CodingIDE
-            lessonId="py_loops_01"
+            lessonId={activeLessonId}
             onBack={() => setActiveTab('learning_hub')}
           />
         )}
@@ -643,6 +654,7 @@ const App = () => {
           <StudyNotebook
             notes={notes}
             setNotes={setNotes}
+            onSave={handleSaveNotes}
             currentUser={currentUser}
             onBack={() => setActiveTab('student_dashboard')}
             enrolledCourses={enrolledCourses}

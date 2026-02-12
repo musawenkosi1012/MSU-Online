@@ -119,6 +119,78 @@
       "rag_used": false,
       "confidence": 0.3,
       "response_time_ms": 283373
+    },
+    {
+      "timestamp": "2026-02-11T12:44:20.530607",
+      "query_length": 2,
+      "response_length": 2183,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 242793
+    },
+    {
+      "timestamp": "2026-02-11T12:59:12.574397",
+      "query_length": 10,
+      "response_length": 45,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 7536
+    },
+    {
+      "timestamp": "2026-02-11T13:02:02.356452",
+      "query_length": 20,
+      "response_length": 2384,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 129703
+    },
+    {
+      "timestamp": "2026-02-11T16:04:29.697649",
+      "query_length": 40,
+      "response_length": 2804,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 237927
+    },
+    {
+      "timestamp": "2026-02-11T16:38:45.921219",
+      "query_length": 2,
+      "response_length": 92,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 9289
+    },
+    {
+      "timestamp": "2026-02-11T16:39:06.221937",
+      "query_length": 31,
+      "response_length": 92,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 2574
+    },
+    {
+      "timestamp": "2026-02-12T08:21:57.792749",
+      "query_length": 2,
+      "response_length": 87,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 188674
+    },
+    {
+      "timestamp": "2026-02-12T08:25:19.236460",
+      "query_length": 17,
+      "response_length": 2868,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 175009
+    },
+    {
+      "timestamp": "2026-02-12T08:53:23.986991",
+      "query_length": 31,
+      "response_length": 175,
+      "rag_used": false,
+      "confidence": 0.3,
+      "response_time_ms": 97280
     }
   ],
   "rag_retrievals": [],
@@ -140,7 +212,16 @@
     161090,
     188725,
     166281,
-    283373
+    283373,
+    242793,
+    7536,
+    129703,
+    237927,
+    9289,
+    2574,
+    188674,
+    175009,
+    97280
   ],
   "daily_stats": {
     "2026-02-09": {
@@ -186,10 +267,10 @@
       ]
     },
     "2026-02-11": {
-      "total_queries": 3,
+      "total_queries": 9,
       "rag_queries": 0,
-      "avg_confidence": 0.3,
-      "avg_response_time": 212793.0,
+      "avg_confidence": 0.29999999999999993,
+      "avg_response_time": 140911.22222222222,
       "activities": [
         {
           "type": "query",
@@ -202,6 +283,50 @@
         {
           "type": "query",
           "timestamp": "2026-02-11T09:58:59.597905"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T12:44:20.522241"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T12:59:12.562076"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T13:02:02.352462"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T16:04:29.688258"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T16:38:45.917504"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-11T16:39:06.219191"
+        }
+      ]
+    },
+    "2026-02-12": {
+      "total_queries": 3,
+      "rag_queries": 0,
+      "avg_confidence": 0.3,
+      "avg_response_time": 153654.33333333334,
+      "activities": [
+        {
+          "type": "query",
+          "timestamp": "2026-02-12T08:21:57.784527"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-12T08:25:19.231743"
+        },
+        {
+          "type": "query",
+          "timestamp": "2026-02-12T08:53:23.975316"
         }
       ]
     }

@@ -202,8 +202,8 @@ class AISessionService:
         messages = session["messages"][-max_messages:]
         context = ""
         for msg in messages:
-            prefix = "User" if msg["role"] == "user" else "Musa"
-            context += f"{prefix}: {msg['content']}\n"
+            prefix = "[STUDENT]" if msg["role"] == "user" else "[MUSA]"
+            context += f"{prefix} {msg['content']}\n"
         return context
     
     # ==========================================

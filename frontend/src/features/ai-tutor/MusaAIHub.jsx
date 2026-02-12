@@ -32,7 +32,8 @@ const MusaAIHub = ({ courses }) => {
     const [mode, setMode] = useState('chat'); // 'chat' | 'interactive'
 
     // Context state
-    const [selectedCourse, setSelectedCourse] = useState(courses?.[0]?.id || null);
+    const [enrolledCourses, setEnrolledCourses] = useState(courses || []);
+    const [selectedCourse, setSelectedCourse] = useState(null);
     const [selectedTopic, setSelectedTopic] = useState(null);
     const [topics, setTopics] = useState([]);
 
@@ -53,6 +54,8 @@ const MusaAIHub = ({ courses }) => {
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [audioUrl, setAudioUrl] = useState(null);
+    const audioRef = useRef(new Audio());
 
     const messagesEndRef = useRef(null);
     const recognitionRef = useRef(null);
@@ -63,14 +66,56 @@ const MusaAIHub = ({ courses }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // Fetch enrolled courses on mount
+    useEffect(() => {
+        const init = async () => {
+            await fetchEnrolledCourses();
+        };
+        init();
+    }, []);
+
+    const fetchEnrolledCourses = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/courses/enrolled`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setEnrolledCourses(data);
+                // If we don't have a course selected yet, pick the first one
+                if (data.length > 0 && !selectedCourse) {
+                    handleCourseSelect(data[0].id);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching enrolled courses:", err);
+        }
+    };
+
+    // Keep state in sync with props
+    useEffect(() => {
+        if (courses?.length > 0) {
+            setEnrolledCourses(courses);
+            if (!selectedCourse) handleCourseSelect(courses[0].id);
+        }
+    }, [courses]);
+
+    const handleCourseSelect = (courseId) => {
+        setSelectedCourse(courseId);
+        // fetchTopics will be triggered by the useEffect below
+    };
+
     // Fetch topics when course changes
     useEffect(() => {
         if (selectedCourse) {
             fetchTopics();
+            fetchRevisionQuestions();
         }
     }, [selectedCourse]);
 
     const fetchTopics = async () => {
+        if (!selectedCourse) return;
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/courses/${selectedCourse}/outline`, {
@@ -88,8 +133,9 @@ const MusaAIHub = ({ courses }) => {
             }
 
             setTopics(allTopics);
-            if (allTopics.length > 0) setSelectedTopic(allTopics[0].topic_id);
-            fetchRevisionQuestions();
+            if (allTopics.length > 0) {
+                setSelectedTopic(allTopics[0].topic_id || allTopics[0].id);
+            }
         } catch (err) {
             console.error("Error fetching topics:", err);
         }
@@ -113,6 +159,14 @@ const MusaAIHub = ({ courses }) => {
     const handleSend = async () => {
         if (!inputValue.trim() || isLoading) return;
 
+        // Ensure we have context
+        if (!selectedCourse) {
+            setMessages(prev => [...prev, { role: 'ai', content: "Please select a course context above before we begin." }]);
+            return;
+        }
+
+        console.log("Musa AI Context:", { selectedCourse, selectedTopic });
+
         const userMessage = inputValue.trim();
         setInputValue('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -123,14 +177,16 @@ const MusaAIHub = ({ courses }) => {
             const payload = mode === 'chat'
                 ? {
                     message: userMessage,
-                    course_id: selectedCourse,
-                    topic_id: selectedTopic,
+                    session_id: sessionId ? String(sessionId) : null,
+                    course_id: selectedCourse ? String(selectedCourse) : null,
+                    topic_id: selectedTopic ? String(selectedTopic) : null,
                     allow_web_scrape: allowWebScrape
                 }
                 : {
                     message: userMessage,
-                    course_id: selectedCourse,
-                    topic_id: selectedTopic
+                    session_id: sessionId ? String(sessionId) : null,
+                    course_id: selectedCourse ? String(selectedCourse) : null,
+                    topic_id: selectedTopic ? String(selectedTopic) : null
                 };
 
             const res = await fetch(`${import.meta.env.VITE_API_BASE}${endpoint}`, {
@@ -142,39 +198,56 @@ const MusaAIHub = ({ courses }) => {
                 body: JSON.stringify(payload)
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setMessages(prev => [...prev, {
-                    role: 'assistant',
-                    content: data.response,
-                    webDataUsed: data.web_data_used,
-                    affectsGpa: data.affects_gpa
-                }]);
+            const data = await res.json();
 
-                if (mode === 'interactive') {
-                    setTutorState(data.current_state || 'INTRODUCE');
-                    setMastery(data.mastery || 0);
-                    setHintsUsed(data.hints_used || 0);
-                    setSessionId(data.session_id);
-                }
+            if (!res.ok) {
+                throw new Error(data.detail || data.message || "Request failed");
+            }
+
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: data.response,
+                webDataUsed: data.web_data_used,
+                affectsGpa: data.affects_gpa
+            }]);
+
+            // Auto-speak if voice mode is on
+            if (isVoiceMode) {
+                speak(data.response);
+            }
+
+            if (mode === 'interactive') {
+                setTutorState(data.current_state || 'INTRODUCE');
+                setMastery(data.mastery || 0);
+                setHintsUsed(data.hints_used || 0);
+                setSessionId(data.session_id);
             }
         } catch (err) {
             console.error("Error sending message:", err);
+
+            let errorMsg = "I'm having trouble connecting. Please try again.";
+            if (err.message) {
+                errorMsg = typeof err.message === 'object'
+                    ? JSON.stringify(err.message)
+                    : err.message;
+            }
+
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: "I'm having trouble connecting. Please try again."
+                content: `ERROR: ${errorMsg}`
             }]);
         } finally {
             setIsLoading(false);
-            // Reset web scrape toggle after each message
-            setAllowWebScrape(false);
         }
     };
 
     // Voice Mode Implementation
     const toggleVoiceMode = () => {
         setIsVoiceMode(!isVoiceMode);
-        if (isSpeaking) window.speechSynthesis.cancel();
+        if (isSpeaking) {
+            audioRef.current.pause();
+            window.speechSynthesis.cancel();
+        }
         setIsSpeaking(false);
     };
 
@@ -204,16 +277,49 @@ const MusaAIHub = ({ courses }) => {
         recognitionRef.current?.stop();
     };
 
-    const speak = (text) => {
+    const speak = async (text) => {
         if (isSpeaking) {
+            audioRef.current.pause();
             window.speechSynthesis.cancel();
             setIsSpeaking(false);
             return;
         }
 
+        setIsSpeaking(true);
+
+        try {
+            // Try backend TTS first for premium Musa voice
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/voice/tts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ text: text.substring(0, 500), voice: "p226" })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.audio_url) {
+                audioRef.current.src = `${import.meta.env.VITE_API_BASE}/api/voice/stream/${data.audio_filename || data.audio_url.split('/').pop()}`;
+                audioRef.current.play().catch(e => {
+                    console.warn("Autoplay blocked or audio error, falling back to browser TTS", e);
+                    browserFallbackSpeak(text);
+                });
+                audioRef.current.onended = () => setIsSpeaking(false);
+            } else {
+                throw new Error("Backend TTS unavailable");
+            }
+        } catch (err) {
+            console.warn("Voice synthesis backend failed, using browser fallback", err);
+            browserFallbackSpeak(text);
+        }
+    };
+
+    const browserFallbackSpeak = (text) => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.onend = () => setIsSpeaking(false);
-        setIsSpeaking(true);
         window.speechSynthesis.speak(utterance);
     };
 
@@ -231,23 +337,31 @@ const MusaAIHub = ({ courses }) => {
                 },
                 body: JSON.stringify({
                     message: "I need a hint please",
-                    course_id: selectedCourse,
-                    topic_id: selectedTopic,
+                    session_id: String(sessionId),
+                    course_id: String(selectedCourse),
+                    topic_id: String(selectedTopic),
                     action: "hint"
                 })
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setMessages(prev => [...prev, {
-                    role: 'assistant',
-                    content: data.response,
-                    isHint: true
-                }]);
-                setHintsUsed(data.hints_used || 0);
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.detail || data.message || "Hint request failed");
             }
+
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: data.response,
+                isHint: true
+            }]);
+            setHintsUsed(data.hints_used || 0);
         } catch (err) {
             console.error("Error requesting hint:", err);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: `HINT ERROR: ${err.message}`
+            }]);
         } finally {
             setIsLoading(false);
         }
@@ -383,7 +497,7 @@ const MusaAIHub = ({ courses }) => {
                         </h4>
                         <select
                             value={selectedCourse || ''}
-                            onChange={(e) => setSelectedCourse(e.target.value)}
+                            onChange={(e) => handleCourseSelect(e.target.value)}
                             style={{
                                 width: '100%',
                                 padding: '0.75rem',
@@ -394,7 +508,7 @@ const MusaAIHub = ({ courses }) => {
                                 fontSize: '0.875rem'
                             }}
                         >
-                            {courses?.map(c => (
+                            {enrolledCourses?.map(c => (
                                 <option key={c.id} value={c.id}>{c.title}</option>
                             ))}
                         </select>

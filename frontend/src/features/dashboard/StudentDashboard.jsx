@@ -14,7 +14,7 @@ import { useGpaScale } from '../../hooks/useGpaScale';
 import GradingBreakdown from '../assessment/GradingBreakdown';
 import { getMasteryBadge } from '../../shared/utils/mastery';
 
-const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown }) => {
+const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown, streak }) => {
     const { formatGpa, getGradeLabel } = useGpaScale();
     const [nextTopic, setNextTopic] = React.useState(null);
 
@@ -97,7 +97,7 @@ const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, mode
                     </div>
                     <div>
                         <p style={{ fontSize: '0.875rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Current Streak</p>
-                        <h3 style={{ fontSize: '2rem', fontWeight: '900', color: '#1E293B' }}>{modelStatus.metrics?.streak_stats?.current_streak || 0} Days</h3>
+                        <h3 style={{ fontSize: '2rem', fontWeight: '900', color: '#1E293B' }}>{streak || modelStatus.metrics?.streak_stats?.current_streak || 0} Days</h3>
                         <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#F97316' }}>Daily Activity</span>
                     </div>
                 </div>

@@ -5,6 +5,13 @@ Generates embeddings using sentence-transformers (BGE-Small or fallback).
 import os
 from typing import List, Union
 import numpy as np
+import warnings
+import logging
+
+# Suppress transformers and weight loading warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
 
 class Embedder:
@@ -27,7 +34,13 @@ class Embedder:
         try:
             from sentence_transformers import SentenceTransformer
             print(f"Loading embedding model: {self.model_name}")
-            self.model = SentenceTransformer(self.model_name)
+            
+            # Use a context manager to catch and ignore the UNEXPECTED position_ids warning
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message=".*embeddings.position_ids.*")
+                warnings.filterwarnings("ignore", category=UserWarning)
+                self.model = SentenceTransformer(self.model_name)
+                
             self.dimension = self.model.get_sentence_embedding_dimension()
             print(f"Embedding model loaded. Dimension: {self.dimension}")
             return True

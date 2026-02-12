@@ -150,6 +150,41 @@ h6 {
   overflow: hidden;
 }
 
+.edu-grid {
+  display: grid;
+}
+
+.edu-grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .edu-grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.edu-col-span-full {
+  grid-column: 1 / -1;
+}
+
+.edu-space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.edu-mt-2 { margin-top: 0.5rem; }
+.edu-mt-4 { margin-top: 1rem; }
+.edu-mt-6 { margin-top: 1.5rem; }
+.edu-mb-2 { margin-bottom: 0.5rem; }
+.edu-mb-4 { margin-bottom: 1rem; }
+.edu-mb-8 { margin-bottom: 2rem; }
+
+.edu-text-sm { font-size: 0.875rem; }
+.edu-uppercase { text-transform: uppercase; }
+.edu-tracking-widest { letter-spacing: 0.1em; }
+.edu-text-slate-400 { color: #94A3B8; }
+.edu-cursor-pointer { cursor: pointer; }
+
 /* Design Components */
 
 /* Cards */

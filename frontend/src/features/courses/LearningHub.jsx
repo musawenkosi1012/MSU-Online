@@ -93,7 +93,7 @@ const LearningHub = ({ courses, onOpenTextbook, onOpenCodingLab }) => {
 
     const handleExerciseStart = (topicId) => {
         console.log("Starting exercise for topic:", topicId);
-        // Navigate to exercise view or open modal
+        onOpenCodingLab(topicId);
     };
 
     const masteryPercent = courseMastery ? Math.round(courseMastery.aggregate_mastery * 100) : 0;

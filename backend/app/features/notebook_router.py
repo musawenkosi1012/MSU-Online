@@ -4,7 +4,7 @@ Persistent notes for students.
 """
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 import io
 import datetime
 from fpdf import FPDF
@@ -17,22 +17,29 @@ router = APIRouter()
 
 class NotesRequest(BaseModel):
     notes: str
+    title: Optional[str] = None
 
 @router.get("/")
-async def get_notes(current_user: User = Depends(auth_service.get_current_user)):
-    """Get notes for the current user."""
+async def get_notes(
+    course_id: Optional[int] = None,
+    current_user: User = Depends(auth_service.get_current_user)
+):
+    """Get notes for the current user, optionally filtered by course."""
     user_id = str(current_user.id)
-    notes = persistence_service.get_notes(user_id)
-    return {"notes": [notes]}
+    notes_list = persistence_service.get_notes(user_id, course_id)
+    return {"notes": notes_list}
 
 @router.post("/")
 async def save_notes(
     data: NotesRequest,
+    course_id: Optional[int] = None,
     current_user: User = Depends(auth_service.get_current_user)
 ):
-    """Save notes for the current user."""
+    """Save notes for the current user, optionally for a specific course."""
     user_id = str(current_user.id)
-    persistence_service.save_notes(user_id, data.notes)
+    # Extract title if possible from request or use default
+    title = getattr(data, 'title', None)
+    persistence_service.save_notes(user_id, data.notes, course_id, title=title)
     return {"status": "success"}
 
 @router.delete("/")

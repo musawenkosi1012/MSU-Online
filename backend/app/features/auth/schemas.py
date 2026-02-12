@@ -3,34 +3,72 @@ Auth Feature Schemas
 Pydantic models for request/response validation.
 """
 from pydantic import BaseModel, EmailStr, Field, validator
+from typing import Optional
+from datetime import datetime
 import re
 
 class SignupRequest(BaseModel):
-    full_name: str = Field(..., min_length=2, max_length=100)
+    first_name: str
+    last_name: str
+    middle_name: Optional[str] = None
+    username: str
     email: EmailStr
-    password: str = Field(..., min_length=8, description="Must be at least 8 characters with numbers and symbols.")
+    password: str
+    confirm_password: str
+    role: str = "student" # student or tutor
+    
+    # Profile
+    dob: str # ISO string
+    mobile_number: str
+    national_id: str
+    gender: str
+    institutional_name: str
+    
+    # Tutor Fields
+    title: Optional[str] = None
+    department: Optional[str] = None
+    pay_number: Optional[str] = None
+    
+    # Consents
+    terms_accepted: bool
+    privacy_accepted: bool
+    data_consent_accepted: bool
+
+    @validator('confirm_password')
+    def passwords_match(cls, v, values):
+        if 'password' in values and v != values['password']:
+            raise ValueError('Passwords do not match')
+        return v
 
     @validator('password')
     def validate_password_strength(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
-        if not re.search(r"[0-9]", v):
-            raise ValueError('Password must contain at least one number')
-        if not re.search(r"[A-Z]", v):
-            raise ValueError('Password must contain at least one uppercase letter')
         return v
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    login_id: str # Can be email or username
     password: str
 
 
 class UserResponse(BaseModel):
     id: int
+    first_name: str
+    last_name: str
+    middle_name: Optional[str] = None
     full_name: str
+    username: str
     email: EmailStr
     role: str
+    dob: Optional[datetime] = None
+    mobile_number: Optional[str] = None
+    national_id: Optional[str] = None
+    gender: Optional[str] = None
+    institutional_name: Optional[str] = None
+    title: Optional[str] = None
+    department: Optional[str] = None
+    pay_number: Optional[str] = None
 
     class Config:
         from_attributes = True

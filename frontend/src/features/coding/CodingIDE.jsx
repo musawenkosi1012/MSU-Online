@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
 
-// Configure monaco to use local version to avoid CDN tracking prevention issues
-loader.config({ monaco });
+// Use default CDN loader for better reliability in varying environments
+// unless strictly required to be offline.
 import {
     Play,
     Send,
@@ -32,15 +31,28 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
     const fetchLesson = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/coding/lessons/${lessonId}`, {
+            const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+            console.log(`[CodingLab] Fetching lesson: ${lessonId} from ${apiBase}`);
+
+            const res = await fetch(`${apiBase}/api/coding/lessons/${lessonId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
             const data = await res.json();
+            console.log("[CodingLab] Lesson data received:", data);
+
+            if (!data || !data.spec) {
+                throw new Error("Invalid lesson data received from server.");
+            }
+
             setLesson(data);
             // Initialize code with a base template
-            setCode(`def ${data.spec.function_name}(${data.spec.parameters.join(', ')}):\n    # Your code here\n    pass`);
+            setCode(`def ${data.spec.function_name}(${(data.spec.parameters || []).join(', ')}):\n    # Your code here\n    pass`);
         } catch (err) {
-            setError("Failed to fetch lesson details.");
+            console.error("[CodingLab] Fetch error:", err);
+            setError(err.message || "Failed to fetch lesson details.");
         } finally {
             setLoading(false);
         }
@@ -122,17 +134,17 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
     );
 
     return (
-        <div className="edu-animate-in" style={{ display: 'flex', flexDirection: 'column', height: '85vh', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 5rem)', gap: '1rem' }}>
             {/* Header */}
-            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', padding: '1rem 2rem', borderRadius: '1.5rem', border: '1px solid #F1F5F9' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
-                        <ChevronLeft size={24} />
+            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', padding: '1.25rem 2rem', borderRadius: '1.5rem', border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button onClick={onBack} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '0.75rem', padding: '0.5rem', cursor: 'pointer', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ChevronLeft size={20} />
                     </button>
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0F172A' }}>{lesson.title}</h2>
-                        <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>
-                            {lesson.language} • Unit {lesson.id.split('_').slice(-1)}
+                        <h2 style={{ fontSize: '1.125rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{lesson.title}</h2>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.25rem' }}>
+                            {lesson.language} • {lesson.id}
                         </div>
                     </div>
                 </div>
@@ -180,20 +192,30 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
             </header>
 
             {/* Three-Pane Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '25% 50% 25%', gap: '1px', flex: 1, background: '#F1F5F9', borderRadius: '1.5rem', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: '25% 50% 25%',
+                gap: '1px',
+                flex: 1,
+                minHeight: '600px',
+                background: '#F1F5F9',
+                borderRadius: '1.5rem',
+                overflow: 'hidden',
+                border: '1px solid #E2E8F0'
+            }}>
 
                 {/* 1. Notes Pane */}
-                <aside style={{ background: '#FFFFFF', padding: '2rem', overflowY: 'auto' }}>
+                <aside style={{ background: '#FFFFFF', padding: '2rem', overflowY: 'auto', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4F46E5', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
                         <BookOpen size={16} /> Instructions
                     </div>
                     <div className="edu-textbook-content" style={{ fontSize: '0.925rem', lineHeight: '1.6', color: '#334155' }}>
                         {/* We use basic replacement for MD headers for now, or a proper parser if available */}
-                        {lesson.notes.split('\n').map((line, i) => {
+                        {lesson?.notes ? lesson.notes.split('\n').map((line, i) => {
                             if (line.startsWith('## ')) return <h3 key={i} style={{ fontWeight: 900, marginTop: '1.5rem', color: '#0F172A' }}>{line.replace('## ', '')}</h3>;
                             if (line.startsWith('### ')) return <h4 key={i} style={{ fontWeight: 800, marginTop: '1rem', color: '#1E293B' }}>{line.replace('### ', '')}</h4>;
                             return <p key={i} style={{ marginBottom: '1rem' }}>{line}</p>;
-                        })}
+                        }) : <p>No instructions provided for this lesson.</p>}
                     </div>
                 </aside>
 

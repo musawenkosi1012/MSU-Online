@@ -1,7 +1,13 @@
-from database import db_session, Course, Module, PerformanceMetric, User, CourseMaterial, QuestionBank
-from auth_service import auth_service
-import datetime
 import os
+import sys
+import json
+import datetime
+
+# Add current directory to path so we can import app
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from app.core.database import db_session, Course, Module, User, CourseMaterial, Assessment
+from app.features.auth.service import auth_service
 
 def seed_data():
     # Check if data already exists
@@ -12,7 +18,8 @@ def seed_data():
         course = Course(
             title="Mastering Information Design",
             description="A comprehensive university-level track covering data visualization, architectural logic, and UX writing.",
-            total_hours=100
+            total_hours=100,
+            credit_value=3
         )
         db_session.add(course)
         db_session.commit()
@@ -37,41 +44,31 @@ def seed_data():
                 title=title,
                 duration="10 Hours",
                 locked=i > 2,
-                progress=100 if i == 0 else (45 if i == 1 else 0)
+                order=i
             )
             db_session.add(mod)
         
-        # Add Sample Metrics
-        db_session.add(PerformanceMetric(metric_name='gpa', value=3.8))
-        db_session.add(PerformanceMetric(metric_name='study_hours', value=12.0))
-        db_session.add(PerformanceMetric(metric_name='progress_percentage', value=45.0))
-
-        # Add Sample Question Bank
-        questions = [
+        # Add Assessments (Replacement for QuestionBank)
+        assessment_data = [
             {
-                "text": "What is the primary goal of Information Architecture?",
-                "options": "[\"Visual design\", \"Content organization\", \"Network security\", \"Database tuning\"]",
-                "correct": "Content organization",
+                "id": "intro_ia_quiz",
+                "topic_id": "ia_foundations",
                 "type": "mcq",
-                "difficulty": "easy"
-            },
-            {
-                "text": "Explain the difference between Top-down and Bottom-up IA.",
-                "options": None,
-                "correct": "Top-down starts from high level...",
-                "type": "essay",
-                "difficulty": "medium"
+                "content": {
+                    "question": "What is the primary goal of Information Architecture?",
+                    "options": ["Visual design", "Content organization", "Network security", "Database tuning"],
+                    "answer": "Content organization"
+                }
             }
         ]
         
-        for q in questions:
-            db_session.add(QuestionBank(
+        for a in assessment_data:
+            db_session.add(Assessment(
+                id=a['id'],
                 course_id=course.id,
-                question_text=q['text'],
-                options=q['options'],
-                correct_answer=q['correct'],
-                type=q['type'],
-                difficulty=q['difficulty']
+                topic_id=a['topic_id'],
+                type=a['type'],
+                content_json=json.dumps(a['content'])
             ))
 
         db_session.commit()

@@ -42,18 +42,26 @@ class VectorStore:
         try:
             import chromadb
             from chromadb.config import Settings
+            import warnings
             
-            # Use persistent storage for the knowledge base
-            self.client = chromadb.Client(Settings(
-                persist_directory=DATA_DIR,
-                anonymized_telemetry=False
-            ))
-            
-            # Ensure the collection uses cosine similarity for educational semantic search
-            self.collection = self.client.get_or_create_collection(
-                name=self.collection_name,
-                metadata={"hnsw:space": "cosine"}
-            )
+            # Suppress Chroma/FastEmbed/Transformers warnings during init
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message=".*embeddings.position_ids.*")
+                
+                # Use persistent storage for the knowledge base
+                self.client = chromadb.Client(Settings(
+                    persist_directory=DATA_DIR,
+                    anonymized_telemetry=False,
+                    chroma_server_nofile=65536
+                ))
+                
+                # Ensure the collection uses cosine similarity for educational semantic search
+                # We set embedding_function=None because we handle embedding manually in this class
+                self.collection = self.client.get_or_create_collection(
+                    name=self.collection_name,
+                    embedding_function=None,
+                    metadata={"hnsw:space": "cosine"}
+                )
             self.use_chroma = True
             print(f"ChromaDB Knowledge Base Initialized: {self.collection_name}")
         except Exception as e:

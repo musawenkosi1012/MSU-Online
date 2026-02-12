@@ -5,12 +5,16 @@ LLM wrapper with structured prompts, RAG integration, and reasoning loops.
 import json
 import os
 from typing import Dict, Any, List, Optional
+from threading import Lock
 from llama_cpp import Llama
 
 from app.core.rag.retriever import retriever
 
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # backend/
-_DEFAULT_MODEL = os.path.join(os.path.dirname(_BASE_DIR), "MSU Online.gguf")
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# For Render, files are usually in /opt/render/project/src/backend/
+# We will look for the model in the project root if backend is subdirectory
+_PROJECT_ROOT = os.path.dirname(_BACKEND_DIR)
+_DEFAULT_MODEL = os.path.join(_PROJECT_ROOT, "MSU Online.gguf")
 MODEL_PATH = os.environ.get("MODEL_PATH", _DEFAULT_MODEL)
 
 # ============================================
@@ -20,10 +24,11 @@ MODEL_PATH = os.environ.get("MODEL_PATH", _DEFAULT_MODEL)
 SYSTEM_PROMPT = """You are Musa, the EduNexus AI Tutor.
 
 CORE RULES:
-- Be brief.
+- Be helpful, encouraging, and accurate.
 - Answer directly without preambles.
-- No reasoning markers (<thought>, etc.).
-- Use provided context.
+- No reasoning or wrapper markers (<thought>, <response>, <speak>, etc.).
+- NEVER repeat your own previous answers or sentences within the same response.
+- Use provided context where relevant.
 """
 
 CHAT_PROMPT_TEMPLATE = """{system_prompt}
@@ -37,8 +42,10 @@ Topics: {topics_covered} | Mastery: {mastery_level} | Style: {learning_style}
 [SESSION HISTORY]
 {conversation_history}
 
-[STUDENT QUERY]
+[CURRENT STUDENT QUERY]
 {user_input}
+
+[MUSA RESPONSE]
 """
 
 INTERACTIVE_PROMPT_TEMPLATE = """{system_prompt}
@@ -54,11 +61,13 @@ Mastery: {mastery}% | Hints: {hints_used}
 Learning Style: {learning_style}
 Common Mistakes: {common_mistakes}
 
-[STUDENT INPUT]
+[CURRENT STUDENT INPUT]
 {user_input}
 
 [PEDAGOGICAL INSTRUCTIONS]
 {state_instructions}
+
+[MUSA RESPONSE]
 """
 
 STATE_INSTRUCTIONS = {
@@ -76,32 +85,48 @@ class ModelService:
     def __init__(self):
         self.llm = None
         self.is_loading = False
+        self.lock = Lock()
         print(f"Model service initialized. Model will be loaded on demand from {MODEL_PATH}")
 
     def load_model(self):
         """Load the model if not already loaded."""
-        if self.llm:
-            return True
-            
-        if self.is_loading:
-            print("Model is already loading...")
-            return False
-
-        print(f"Activating DeepSeek Reasoning Engine from {MODEL_PATH}...")
-        self.is_loading = True
+        with self.lock:
+            if self.llm:
+                return True
+                
+            if self.is_loading:
+                print("Model is already loading...")
+                return False
+    
+            print(f"Activating DeepSeek Reasoning Engine from {MODEL_PATH}...")
+            self.is_loading = True
         try:
+            # Check for Mock Mode (Essential for low-RAM Render Free)
+            if os.environ.get("USE_MOCK_LLM", "false").lower() == "true":
+                print("[SYSTEM] Running in MOCK AI Mode (No GGUF file needed)")
+                self.llm = "MOCK"
+                self.is_loading = False
+                return True
+
             # Performance tuning for prompt ingestion and generation
             import os
             cpu_count = os.cpu_count() or 4
             # Use physical cores (estimate as half of logical if logically high)
             threads = max(4, cpu_count // 2) if cpu_count > 8 else cpu_count
             
+            # Check if file exists before trying to load (avoids hard crash)
+            if not os.path.exists(MODEL_PATH):
+                print(f"[WARNING] Model file not found at {MODEL_PATH}. Switching to Mock Mode.")
+                self.llm = "MOCK"
+                self.is_loading = False
+                return True
+
             self.llm = Llama(
                 model_path=MODEL_PATH,
                 n_ctx=8192,
                 n_threads=threads,
                 n_threads_batch=threads,
-                n_batch=1024,
+                n_batch=512,
                 n_gpu_layers=0,
                 f16_kv=True,
                 use_mmap=True,
@@ -118,14 +143,15 @@ class ModelService:
 
     def unload_model(self):
         """Unload the model to free up resources."""
-        if self.llm:
-            del self.llm
-            self.llm = None
-            import gc
-            gc.collect()
-            print("Model unloaded.")
-            return True
-        return False
+        with self.lock:
+            if self.llm:
+                del self.llm
+                self.llm = None
+                import gc
+                gc.collect()
+                print("Model unloaded.")
+                return True
+            return False
 
     # ============================================
     # RAG-ENHANCED GENERATION
@@ -306,36 +332,99 @@ If issues found, provide a corrected answer. If accurate, confirm:"""
             if not success:
                 return "I'm having trouble loading my AI brain. Please try again."
 
+
+        # Handle Mock Mode
+        if self.llm == "MOCK":
+            import time, json
+            time.sleep(1.0) # Simulate thinking
+            print(f"[MOCK AI] Generating response for prompt prefix: {prompt[:50]}...")
+            
+            # Simple keyword-based responses
+            lower_prompt = prompt.lower()
+            if "hello" in lower_prompt or "hi " in lower_prompt:
+                return "Hello! I'm Musa, your AI Tutor. How can I help you with your studies today?"
+            elif "grade" in lower_prompt and "json" in lower_prompt:
+                # Mock grading logic
+                return json.dumps({
+                    "rubric": {"correctness": 88, "reasoning": 85, "completeness": 90, "clarity": 95},
+                    "score": 89,
+                    "feedback": "This is a great answer! You covered the main points clearly. (Mock Feedback)"
+                })
+            elif "exam" in lower_prompt and "json" in lower_prompt:
+                # Mock exam generation
+                return json.dumps({
+                    "mcqs": [{"question": "What is Python?", "options": ["Snake", "Language", "Car"], "answer": "Language"} for _ in range(5)],
+                    "open_ended": [{"question": "Explain recursion.", "marks": 10} for _ in range(2)],
+                    "coding_prompt": "Write a function to add two numbers."
+                })
+            else:
+                return f"This is a simulated AI response from the Mock Engine. I received your request about: {prompt[:30]}..."
+
         try:
             print(f"[AI] Generating response for prompt length: {len(prompt)} chars...")
             
-            output = self.llm(
-                prompt,
-                max_tokens=min(max_tokens, 4096),
-                stop=["User:", "System:", "\n\n\n"],
+            # context management to prevent OOM / Assertions
+            with self.lock:
+                prompt_tokens = self.llm.tokenize(prompt.encode("utf-8"))
+                n_prompt_tokens = len(prompt_tokens)
+                n_ctx = self.llm.n_ctx()
+                
+                # Reserve space for generation
+                # If prompt eats up all context, we must truncate the prompt from the beginning (FIFO)
+                # or simply fail. For robustness, let's keep the last (n_ctx - max_tokens - safety) tokens.
+                
+                max_possible_tokens = n_ctx - 20 # Leave a small buffer
+                
+                if n_prompt_tokens + max_tokens > max_possible_tokens:
+                    # Strategy: Preserving instructions is key. Truncate from the middle of the prompt.
+                    keep_prefix = 500
+                    keep_suffix = max_possible_tokens - max_tokens - keep_prefix
+                    
+                    if keep_suffix > 0:
+                        prefix_tokens = prompt_tokens[:keep_prefix]
+                        suffix_tokens = prompt_tokens[-keep_suffix:]
+                        prompt_tokens = prefix_tokens + suffix_tokens
+                        prompt = self.llm.detokenize(prompt_tokens).decode("utf-8", errors="ignore")
+                        print(f"[AI] Truncated middle of prompt. Preserved {keep_prefix} prefix and {keep_suffix} suffix tokens.")
+                    else:
+                        # Fallback: just keep the end
+                        prompt_tokens = prompt_tokens[-(max_possible_tokens - max_tokens):]
+                        prompt = self.llm.detokenize(prompt_tokens).decode("utf-8", errors="ignore")
+                        print(f"[AI] Truncated prompt to end-only. Context may be lost.")
+    
+                output = self.llm(
+                    prompt,
+                    max_tokens=max_tokens,
+                stop=["[STUDENT]", "[STUDENT QUERY]", "[STUDENT INPUT]", "System:", "\n\n\n\n"],
                 echo=False,
-                temperature=0.3,      # Lower for factual accuracy
+                temperature=0.3,      
                 top_p=0.9,
-                repeat_penalty=1.1,   # Reduce repetition
+                repeat_penalty=1.2,   # Increased from 1.1 to reduce repetition loops
             )
             
             result = output["choices"][0]["text"].strip()
             
             # Enhanced cleaning for reasoning artifacts
             import re
-            # Aggressive tag list
-            tags = ['thought', 'thinking', 'memory', 'reasoning', 'step-by-step reasoning', 'final_answer', 'steps']
-            for tag in tags:
-                # Remove paired tags and everything inside
+            
+            # 1. Remove hidden reasoning tags and their content (Closed tags)
+            hidden_tags = ['thought', 'thinking', 'memory', 'reasoning', 'step-by-step reasoning', 'steps']
+            for tag in hidden_tags:
+                # Remove content inside tag only if tag is closed
                 result = re.sub(f'<{tag}[^>]*>.*?</{tag}>', '', result, flags=re.DOTALL | re.IGNORECASE)
-                # Remove unclosed tags (usually at the end)
-                result = re.sub(f'<{tag}[^>]*>.*', '', result, flags=re.DOTALL | re.IGNORECASE)
-                # Remove any stray closing tags
+            
+            # 2. Strip leftover tag declarations (Just the tags themselves, not the content)
+            for tag in hidden_tags:
+                result = re.sub(f'<{tag}[^>]*>', '', result, flags=re.IGNORECASE)
                 result = re.sub(f'</{tag}[^>]*>', '', result, flags=re.IGNORECASE)
             
-            # Catch common raw tags if any survived
-            result = re.sub(r'<(thought|final_answer|reasoning)>', '', result, flags=re.IGNORECASE)
-            result = re.sub(r'</(thought|final_answer|reasoning)>', '', result, flags=re.IGNORECASE)
+            # 3. Strip wrapper tags but keep their content
+            wrapper_tags = ['response', 'speak', 'final_answer', 'essay', 'outline', 'MUSA RESPONSE']
+            for tag in wrapper_tags:
+                result = re.sub(f'<{tag}[^>]*>', '', result, flags=re.IGNORECASE)
+                result = re.sub(f'</{tag}[^>]*>', '', result, flags=re.IGNORECASE)
+                # Also strip label format [TAG]
+                result = re.sub(f'\\[{tag}\\]', '', result, flags=re.IGNORECASE)
             
             # Clean up residual artifacts and weird whitespace
             result = re.sub(r'^\s*[\n\r]+', '', result) 

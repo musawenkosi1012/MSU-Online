@@ -12,6 +12,10 @@ export default defineConfig({
     hmr: {
       overlay: false
     },
-    host: true
+    host: true,
+    allowedHosts: [
+      'light-parents-open.loca.lt',
+      'bb2a85b601e3eb20-197-221-232-183.serveousercontent.com'
+    ]
   }
 })

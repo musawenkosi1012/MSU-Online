@@ -1,15 +1,51 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowRight, Github, Chrome, Sparkles, LogIn, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ShieldCheck, CreditCard, Building, Calendar, Phone, Hash, Users, Sparkles, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 
 const Auth = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        password: ''
-    });
-    const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    // Comprehensive form data
+    const [formData, setFormData] = useState({
+        // Auth
+        email: '',
+        username: '',
+        password: '',
+        confirm_password: '',
+        login_id: '', // For login
+
+        // Names
+        first_name: '',
+        last_name: '',
+        middle_name: '',
+
+        // Identity
+        role: 'student',
+        dob: '',
+        gender: '',
+        national_id: '',
+        mobile_number: '',
+
+        // Institutional
+        institutional_name: '',
+        title: '', // Mr, Mrs, Miss, Dr, etc.
+        department: '',
+        pay_number: '',
+
+        // Consents
+        terms_accepted: false,
+        privacy_accepted: false,
+        data_consent_accepted: false
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -17,9 +53,23 @@ const Auth = ({ onLogin }) => {
         setIsLoading(true);
 
         const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-        const payload = isLogin
-            ? { email: formData.email, password: formData.password }
-            : { full_name: formData.fullName, email: formData.email, password: formData.password };
+
+        // Prepare payload
+        let payload;
+        if (isLogin) {
+            payload = {
+                login_id: formData.login_id || formData.username || formData.email,
+                password: formData.password
+            };
+        } else {
+            // Validate consents
+            if (!formData.terms_accepted || !formData.privacy_accepted || !formData.data_consent_accepted) {
+                setError('You must accept all terms and consents to proceed.');
+                setIsLoading(false);
+                return;
+            }
+            payload = { ...formData };
+        }
 
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE}${endpoint}`, {
@@ -44,150 +94,250 @@ const Auth = ({ onLogin }) => {
         }
     };
 
-    const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
     return (
-        <div className="edu-min-h-screen edu-flex edu-items-center edu-justify-center edu-p-6 edu-relative edu-overflow-hidden">
-            {/* Background Decorations */}
-            <div className="edu-orb" style={{ top: '-5rem', left: '-5rem', width: '32rem', height: '32rem', background: 'radial-gradient(circle, rgba(24, 69, 59, 0.15) 0%, transparent 70%)' }}></div>
-            <div className="edu-orb" style={{ bottom: '-5rem', right: '-5rem', width: '32rem', height: '32rem', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)' }}></div>
+        <div className="edu-min-h-screen edu-flex edu-items-center edu-justify-center edu-p-6 edu-relative edu-overflow-hidden" style={{ background: '#F8FAFC' }}>
+            {/* Orbs */}
+            <div className="edu-orb" style={{ top: '-10rem', left: '-10rem', width: '40rem', height: '40rem', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' }}></div>
+            <div className="edu-orb" style={{ bottom: '-10rem', right: '-10rem', width: '40rem', height: '40rem', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)' }}></div>
 
-            <div className="edu-card edu-max-w-md edu-w-full edu-relative edu-rotate-in" style={{
-
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)'
+            <div className={`edu-card ${isLogin ? 'edu-max-w-md' : 'edu-max-w-4xl'} edu-w-full edu-relative edu-rotate-in`} style={{
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(30px)',
+                border: '1px solid rgba(255, 255, 255, 0.5)',
+                boxShadow: '0 40px 100px -20px rgba(0, 0, 0, 0.05)',
+                padding: '3rem',
+                borderRadius: '2.5rem'
             }}>
-                <div className="edu-text-center edu-mb-10" style={{ marginBottom: '2.5rem' }}>
-                    <div className="edu-flex edu-items-center edu-justify-center edu-gap-4 edu-mb-6" style={{ marginBottom: '1.5rem' }}>
-                        <div style={{ width: '3.5rem', height: '3.5rem', background: 'linear-gradient(135deg, var(--edu-indigo), #0B9A6D)', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px -5px var(--edu-indigo-glow)' }}>
-                            <Sparkles color="#FFFFFF" size={28} />
+                <div className="edu-text-center edu-mb-8">
+                    <div className="edu-flex edu-items-center edu-justify-center edu-gap-3 edu-mb-4">
+                        <div style={{ width: '3rem', height: '3rem', background: 'linear-gradient(135deg, #6366F1, #10B981)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(99, 102, 241, 0.2)' }}>
+                            <Sparkles color="#FFFFFF" size={24} />
                         </div>
-                        <h1 className="edu-text-2xl edu-font-black edu-tracking-tight" style={{ fontSize: '1.75rem', color: '#1E293B' }}>MSU Online</h1>
+                        <h1 className="edu-text-xl edu-font-black edu-tracking-tight" style={{ color: '#1E293B' }}>MSU <span style={{ color: '#10B981' }}>ONLINE</span></h1>
                     </div>
-                    <h2 className="edu-text-3xl edu-font-black edu-mb-2" style={{ marginBottom: '0.5rem', color: '#0F172A' }}>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-                    <p className="edu-text-slate-500 edu-font-bold" style={{ fontSize: '1rem' }}>
-                        {isLogin
-                            ? 'Unlock your personalized academic journey.'
-                            : 'Join the premier AI-driven learning community.'}
+                    <h2 className="edu-text-3xl edu-font-black edu-mb-2" style={{ color: '#0F172A' }}>{isLogin ? 'Welcome Back' : 'Create Your Profile'}</h2>
+                    <p className="edu-text-slate-500 edu-font-medium" style={{ fontSize: '0.95rem' }}>
+                        {isLogin ? 'Use your username or email to continue.' : 'Provide your official credentials to join the network.'}
                     </p>
                 </div>
 
                 {error && (
-                    <div style={{ marginBottom: '1.5rem', padding: '1.25rem', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#DC2626', borderRadius: '1.25rem', fontSize: '0.875rem', fontWeight: '700', textAlign: 'center', animation: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both' }}>
+                    <div style={{ marginBottom: '2rem', padding: '1rem', background: '#FFF1F2', border: '1px solid #FFE4E6', color: '#E11D48', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: '700', textAlign: 'center' }}>
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    {!isLogin && (
-                        <div className="edu-input-group">
-                            <label className="edu-input-label">Full Name</label>
-                            <div className="edu-input-wrapper">
-                                <User className="edu-input-icon" />
-                                <input
-                                    type="text"
-                                    name="fullName"
-                                    placeholder="Enter your name"
-                                    required
-                                    className="edu-input"
-                                    value={formData.fullName}
-                                    onChange={handleInputChange}
-                                />
+                    {isLogin ? (
+                        <div className="edu-space-y-4">
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Username or Email</label>
+                                <div className="edu-input-wrapper">
+                                    <User className="edu-input-icon" />
+                                    <input type="text" name="login_id" placeholder="Enter ID" required className="edu-input" value={formData.login_id} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Password</label>
+                                <div className="edu-input-wrapper">
+                                    <Lock className="edu-input-icon" />
+                                    <input type="password" name="password" placeholder="••••••••" required className="edu-input" value={formData.password} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="edu-grid edu-grid-cols-1 md:edu-grid-cols-3 edu-gap-6">
+                            {/* Personal Identification */}
+                            <div className="edu-col-span-full edu-mb-2">
+                                <h3 className="edu-flex edu-items-center edu-gap-2 edu-text-sm edu-font-black edu-text-slate-400 edu-uppercase edu-tracking-widest">
+                                    <User size={14} /> Personal Identity
+                                </h3>
+                                <div style={{ height: '1px', background: '#E2E8F0', marginTop: '0.5rem' }}></div>
+                            </div>
+
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Title</label>
+                                <select name="title" className="edu-input" value={formData.title} onChange={handleInputChange}>
+                                    <option value="">Select Title</option>
+                                    <option value="Mr">Mr.</option>
+                                    <option value="Mrs">Mrs.</option>
+                                    <option value="Miss">Miss.</option>
+                                    <option value="Ms">Ms.</option>
+                                    <option value="Dr">Dr.</option>
+                                    <option value="Prof">Prof.</option>
+                                </select>
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">First Name</label>
+                                <input type="text" name="first_name" placeholder="John" required className="edu-input" value={formData.first_name} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Middle Name</label>
+                                <input type="text" name="middle_name" placeholder="Second Name" className="edu-input" value={formData.middle_name} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Last Name</label>
+                                <input type="text" name="last_name" placeholder="Doe" required className="edu-input" value={formData.last_name} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Gender</label>
+                                <select name="gender" required className="edu-input" value={formData.gender} onChange={handleInputChange}>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Date of Birth</label>
+                                <div className="edu-input-wrapper">
+                                    <Calendar className="edu-input-icon" />
+                                    <input type="date" name="dob" required className="edu-input" value={formData.dob} onChange={handleInputChange} />
+                                </div>
+                            </div>
+
+                            {/* Contact & Legal */}
+                            <div className="edu-col-span-full edu-mt-4 edu-mb-2">
+                                <h3 className="edu-flex edu-items-center edu-gap-2 edu-text-sm edu-font-black edu-text-slate-400 edu-uppercase edu-tracking-widest">
+                                    <Mail size={14} /> Contact & Legal ID
+                                </h3>
+                                <div style={{ height: '1px', background: '#E2E8F0', marginTop: '0.5rem' }}></div>
+                            </div>
+
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">National ID Number</label>
+                                <div className="edu-input-wrapper">
+                                    <Hash className="edu-input-icon" />
+                                    <input type="text" name="national_id" placeholder="ID Number" required className="edu-input" value={formData.national_id} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Email Address</label>
+                                <div className="edu-input-wrapper">
+                                    <Mail className="edu-input-icon" />
+                                    <input type="email" name="email" placeholder="official@edu.com" required className="edu-input" value={formData.email} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Mobile Number</label>
+                                <div className="edu-input-wrapper">
+                                    <Phone className="edu-input-icon" />
+                                    <input type="tel" name="mobile_number" placeholder="+263..." required className="edu-input" value={formData.mobile_number} onChange={handleInputChange} />
+                                </div>
+                            </div>
+
+                            {/* Institutional */}
+                            <div className="edu-col-span-full edu-mt-4 edu-mb-2">
+                                <h3 className="edu-flex edu-items-center edu-gap-2 edu-text-sm edu-font-black edu-text-slate-400 edu-uppercase edu-tracking-widest">
+                                    <Building size={14} /> Institutional Data
+                                </h3>
+                                <div style={{ height: '1px', background: '#E2E8F0', marginTop: '0.5rem' }}></div>
+                            </div>
+
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Institution Name</label>
+                                <input type="text" name="institutional_name" placeholder="Midlands State University" required className="edu-input" value={formData.institutional_name} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Primary Role</label>
+                                <select name="role" required className="edu-input" value={formData.role} onChange={handleInputChange}>
+                                    <option value="student">Student</option>
+                                    <option value="tutor">Tutor / Staff</option>
+                                </select>
+                            </div>
+
+                            {formData.role === 'tutor' && (
+                                <>
+                                    <div className="edu-input-group">
+                                        <label className="edu-input-label">Department</label>
+                                        <input type="text" name="department" placeholder="Computer Science" required className="edu-input" value={formData.department} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="edu-input-group">
+                                        <label className="edu-input-label">Pay Number</label>
+                                        <div className="edu-input-wrapper">
+                                            <CreditCard className="edu-input-icon" />
+                                            <input type="text" name="pay_number" placeholder="Staff ID / Pay #" required className="edu-input" value={formData.pay_number} onChange={handleInputChange} />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Credentials */}
+                            <div className="edu-col-span-full edu-mt-4 edu-mb-2">
+                                <h3 className="edu-flex edu-items-center edu-gap-2 edu-text-sm edu-font-black edu-text-slate-400 edu-uppercase edu-tracking-widest">
+                                    <ShieldCheck size={14} /> System Credentials
+                                </h3>
+                                <div style={{ height: '1px', background: '#E2E8F0', marginTop: '0.5rem' }}></div>
+                            </div>
+
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Username</label>
+                                <input type="text" name="username" placeholder="Choose username" required className="edu-input" value={formData.username} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Secret Password</label>
+                                <input type="password" name="password" placeholder="••••••••" required className="edu-input" value={formData.password} onChange={handleInputChange} />
+                            </div>
+                            <div className="edu-input-group">
+                                <label className="edu-input-label">Confirm Password</label>
+                                <input type="password" name="confirm_password" placeholder="••••••••" required className="edu-input" value={formData.confirm_password} onChange={handleInputChange} />
+                            </div>
+
+                            {/* Consents */}
+                            <div className="edu-col-span-full edu-mt-6 edu-p-6" style={{ background: '#F1F5F9', borderRadius: '1.5rem' }}>
+                                <div className="edu-space-y-4">
+                                    <label className="edu-flex edu-items-center edu-gap-3 edu-cursor-pointer">
+                                        <input type="checkbox" name="terms_accepted" checked={formData.terms_accepted} onChange={handleInputChange} style={{ width: '1.25rem', height: '1.25rem', accentColor: '#10B981' }} />
+                                        <span className="edu-text-sm edu-font-bold edu-text-slate-600">I accept the Terms and Conditions of MSU Online.</span>
+                                    </label>
+                                    <label className="edu-flex edu-items-center edu-gap-3 edu-cursor-pointer">
+                                        <input type="checkbox" name="privacy_accepted" checked={formData.privacy_accepted} onChange={handleInputChange} style={{ width: '1.25rem', height: '1.25rem', accentColor: '#10B981' }} />
+                                        <span className="edu-text-sm edu-font-bold edu-text-slate-600">I have read and agree to the Privacy Policy.</span>
+                                    </label>
+                                    <label className="edu-flex edu-items-center edu-gap-3 edu-cursor-pointer">
+                                        <input type="checkbox" name="data_consent_accepted" checked={formData.data_consent_accepted} onChange={handleInputChange} style={{ width: '1.25rem', height: '1.25rem', accentColor: '#10B981' }} />
+                                        <span className="edu-text-sm edu-font-bold edu-text-slate-600">I consent to the collection and processing of my academic data.</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     )}
-
-                    <div className="edu-input-group">
-                        <label className="edu-input-label">Institutional Email</label>
-                        <div className="edu-input-wrapper">
-                            <Mail className="edu-input-icon" />
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="name@university.edu"
-                                required
-                                className="edu-input"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="edu-input-group">
-                        <div className="edu-flex edu-justify-between edu-items-center" style={{ marginLeft: '0.25rem' }}>
-                            <label className="edu-input-label">Secret Credential</label>
-                            {isLogin && <a href="#" style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--edu-indigo)', textDecoration: 'none' }}>Recover?</a>}
-                        </div>
-                        <div className="edu-input-wrapper">
-                            <Lock className="edu-input-icon" />
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="••••••••"
-                                required
-                                className="edu-input"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                    </div>
 
                     <button
                         type="submit"
                         disabled={isLoading}
                         className="edu-btn edu-btn-primary"
                         style={{
-                            marginTop: '1.5rem',
-                            background: 'linear-gradient(135deg, var(--edu-indigo), var(--edu-indigo-dark))',
-                            boxShadow: '0 15px 30px -10px var(--edu-indigo-glow)'
+                            marginTop: '2rem',
+                            padding: '1.25rem',
+                            background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                            boxShadow: '0 20px 40px -10px rgba(99, 102, 241, 0.3)',
+                            fontSize: '1rem',
+                            borderRadius: '1.25rem'
                         }}
                     >
-                        {isLoading ? 'Processing Access...' : (isLogin ? 'Grant Access' : 'Register Profile')}
+                        {isLoading ? 'Verifying Credentials...' : (isLogin ? 'Grant Access' : 'Initialize Account')}
                         {!isLoading && (isLogin ? <LogIn size={20} /> : <UserPlus size={20} />)}
                     </button>
                 </form>
 
-                <div className="edu-flex edu-items-center edu-gap-4" style={{ margin: '2.5rem 0' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, #E2E8F0, transparent)' }}></div>
-                    <span style={{ fontSize: '0.625rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Unified Intelligence Login</span>
-                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, #E2E8F0, transparent)' }}></div>
-                </div>
-
-                <div className="edu-flex edu-gap-4">
-                    <button className="edu-btn edu-btn-outline" style={{ padding: '0.875rem', borderRadius: '1.25rem', background: '#FFFFFF' }}>
-                        <Chrome size={20} style={{ color: '#EA4335' }} />
-                        <span style={{ fontSize: '0.875rem' }}>Google</span>
-                    </button>
-                    <button className="edu-btn edu-btn-outline" style={{ padding: '0.875rem', borderRadius: '1.25rem', background: '#FFFFFF' }}>
-                        <Github size={20} />
-                        <span style={{ fontSize: '0.875rem' }}>GitHub</span>
-                    </button>
-                </div>
-
-                <div className="edu-text-center" style={{ marginTop: '3rem' }}>
-                    <p className="edu-text-slate-500 edu-font-bold" style={{ fontSize: '0.875rem' }}>
-                        {isLogin ? "New to the platform?" : "Already a member?"}
+                <div className="edu-text-center" style={{ marginTop: '2.5rem' }}>
+                    <p className="edu-text-slate-400 edu-font-bold" style={{ fontSize: '0.9rem' }}>
+                        {isLogin ? "New to the MSU community?" : "Already possess an account?"}
                         <button
                             onClick={() => setIsLogin(!isLogin)}
                             style={{
-                                marginLeft: '0.5rem',
+                                marginLeft: '0.6rem',
                                 fontWeight: '900',
-                                color: 'var(--edu-indigo)',
+                                color: '#6366F1',
                                 background: 'none',
                                 border: 'none',
-                                borderBottom: '2px solid var(--edu-indigo-glow)',
+                                borderBottom: '2px solid rgba(99, 102, 241, 0.2)',
                                 cursor: 'pointer',
-                                padding: '0 0 2px 0',
                                 transition: 'all 0.2s'
                             }}
-                            onMouseOver={(e) => e.target.style.borderBottom = '2px solid var(--edu-indigo)'}
-                            onMouseOut={(e) => e.target.style.borderBottom = '2px solid var(--edu-indigo-glow)'}
                         >
-                            {isLogin ? 'Create Profile' : 'Gain Access'}
+                            {isLogin ? 'Establish Profile' : 'Authenticate Identity'}
                         </button>
                     </p>
                 </div>

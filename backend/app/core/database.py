@@ -33,10 +33,32 @@ class Enrollment(Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    full_name = Column(String(255), nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    middle_name = Column(String(100), nullable=True)
+    full_name = Column(String(255), nullable=False) # Concatenated
+    username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     role = Column(String(50), default="student") # student, tutor, admin
+    
+    # New Profile Fields
+    dob = Column(DateTime, nullable=True)
+    mobile_number = Column(String(50), nullable=True)
+    national_id = Column(String(50), nullable=True)
+    gender = Column(String(20), nullable=True)
+    institutional_name = Column(String(255), nullable=True)
+    
+    # Tutor Specific Fields
+    title = Column(String(20), nullable=True) # Mr/Mrs/Miss/Dr
+    department = Column(String(100), nullable=True)
+    pay_number = Column(String(50), nullable=True)
+    
+    # Consents
+    terms_accepted = Column(Boolean, default=False)
+    privacy_accepted = Column(Boolean, default=False)
+    data_consent_accepted = Column(Boolean, default=False)
+    
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     # Relationships
@@ -199,11 +221,13 @@ class Note(Base):
     __tablename__ = 'notes'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
+    course_id = Column(Integer, ForeignKey('courses.id'), nullable=True)
     title = Column(String(255))
     content = Column(Text)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
     user = relationship("User", back_populates="notes")
+    course = relationship("Course")
 
 class ActivityLog(Base):
     __tablename__ = 'activity_logs'
@@ -258,7 +282,12 @@ class GeneratedContent(Base):
 # INITIALIZATION
 # ============================================
 
-engine = create_engine('sqlite:///unstoppable_minds.db', connect_args={"check_same_thread": False})
+# Handle DB path dynamically for Render (Linux) and Local (Windows)
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_BASE_DB_PATH = os.path.join(_BACKEND_DIR, "unstoppable_minds.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{_BASE_DB_PATH}")
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 Base.metadata.create_all(engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

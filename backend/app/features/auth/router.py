@@ -17,23 +17,54 @@ logger = logging.getLogger(__name__)
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
-    """Register a new user (Default Role: Student)."""
+    """Register a new user with comprehensive details."""
     try:
-        # Enforce student role by default for security
-        # Tutors/Admins must be upgraded manually or via admin API
-        role = "student"
-        
+        # Check if email or username exists
+        if db.query(User).filter(User.email == request.email).first():
+            raise HTTPException(status_code=400, detail="Email already registered")
+        if db.query(User).filter(User.username == request.username).first():
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+        # Derive full name
+        name_parts = [request.first_name]
+        if request.middle_name:
+            name_parts.append(request.middle_name)
+        name_parts.append(request.last_name)
+        full_name = " ".join(name_parts)
+
+        # Parse DOB
+        try:
+            from datetime import datetime
+            dob_dt = datetime.fromisoformat(request.dob.replace('Z', '+00:00'))
+        except:
+            dob_dt = None
+
         new_user = User(
-            full_name=request.full_name,
+            first_name=request.first_name,
+            last_name=request.last_name,
+            middle_name=request.middle_name,
+            full_name=full_name,
+            username=request.username,
             email=request.email,
             hashed_password=auth_service.get_password_hash(request.password),
-            role=role
+            role=request.role, # Allow role from request for this specific requirement
+            dob=dob_dt,
+            mobile_number=request.mobile_number,
+            national_id=request.national_id,
+            gender=request.gender,
+            institutional_name=request.institutional_name,
+            title=request.title,
+            department=request.department,
+            pay_number=request.pay_number,
+            terms_accepted=request.terms_accepted,
+            privacy_accepted=request.privacy_accepted,
+            data_consent_accepted=request.data_consent_accepted
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
         
-        logger.info(f"New user registered: {new_user.email} (ID: {new_user.id})")
+        logger.info(f"New user registered: {new_user.username} (ID: {new_user.id})")
 
         access_token = auth_service.create_access_token(
             data={"sub": str(new_user.id), "role": new_user.role}
@@ -44,31 +75,28 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
             "token_type": "bearer",
             "user": new_user
         }
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Email already registered"
-        )
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         logger.error(f"Signup error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Registration failed due to server error."
+            detail=f"Registration failed: {str(e)}"
         )
 
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
-    """Authenticate and return a token."""
-    user = db.query(User).filter(User.email == request.email).first()
+    """Authenticate via username or email."""
+    user = db.query(User).filter(
+        (User.email == request.login_id) | (User.username == request.login_id)
+    ).first()
     
     if not user or not auth_service.verify_password(request.password, user.hashed_password):
-        # Log failed attempt (generic message to client)
-        logger.warning(f"Failed login attempt for: {request.email}")
+        logger.warning(f"Failed login attempt for: {request.login_id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Incorrect email or password",
+            detail="Incorrect username/email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

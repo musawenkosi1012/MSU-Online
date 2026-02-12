@@ -64,15 +64,27 @@ class LessonService:
         Only return valid JSON.
         """
         
-        response = model_service.generate_response(prompt, max_tokens=2000)
+        response = model_service.generate_response(prompt, max_tokens=1024)
         
         try:
             # Clean JSON
             clean_json = response.strip()
+            
+            # Robust JSON extraction
             if "```json" in clean_json:
                 clean_json = clean_json.split("```json")[1].split("```")[0].strip()
             elif "```" in clean_json:
                 clean_json = clean_json.split("```")[1].split("```")[0].strip()
+            elif "{" in clean_json:
+                # Find start and end of JSON object
+                start = clean_json.find("{")
+                end = clean_json.rfind("}")
+                if start != -1 and end != -1:
+                    clean_json = clean_json[start:end+1]
+            
+            if not clean_json:
+                print(f"[CodingService] ERROR: AI response was empty or contained no JSON blocks. Raw: {response[:100]}...")
+                raise ValueError("AI response empty")
                 
             data = json.loads(clean_json)
             
