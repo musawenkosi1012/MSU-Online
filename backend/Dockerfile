@@ -33,6 +33,15 @@ COPY . .
 # Expose port (Choreo usually expects 8080 or configures it)
 EXPOSE 8080
 
+# Create a non-root user with a specific UID (10014 is common for Choreo)
+RUN addgroup --gid 10014 choreo && \
+    adduser --uid 10014 --gid 10014 --disabled-password --gecos "" choreo
+
+# Set ownership of the application directory to the non-root user
+RUN chown -R choreo:choreo /app
+
+# Switch to the non-root user
+USER 10014
+
 # Run the application
-# We use standard uvicorn command, ensuring host is 0.0.0.0 and port matches env
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
