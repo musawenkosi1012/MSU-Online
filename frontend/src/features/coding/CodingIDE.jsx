@@ -16,7 +16,11 @@ import {
     BookOpen
 } from 'lucide-react';
 
+// Configure monaco to use CDN for better build performance and reliability
+loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' } });
+
 const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
+    console.log("[CodingIDE] Initializing with lesson:", lessonId);
     const [lesson, setLesson] = useState(null);
     const [code, setCode] = useState('');
     const [output, setOutput] = useState(null);

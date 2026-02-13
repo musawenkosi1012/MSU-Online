@@ -48,7 +48,7 @@ def seed_coding_lesson():
         type='coding_lesson',
         title=topic,
         content=json.dumps(lesson_data),
-        user_id=1
+        user_id=None
     )
     
     db.add(new_content)

@@ -270,7 +270,7 @@ class GeneratedContent(Base):
     """Stores AI-generated essays, textbooks, or lesson plans."""
     __tablename__ = 'generated_content'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     course_id = Column(Integer, ForeignKey('courses.id'), nullable=True)
     type = Column(String(50)) # essay, textbook, lesson_plan
     title = Column(String(255))

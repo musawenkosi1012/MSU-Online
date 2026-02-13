@@ -99,7 +99,7 @@ class LessonService:
                 type='coding_lesson',
                 title=topic, # ID
                 content=json.dumps(data),
-                user_id=1 # System/Admin
+                user_id=None # System-generated
             )
             db.add(new_content)
             db.commit()

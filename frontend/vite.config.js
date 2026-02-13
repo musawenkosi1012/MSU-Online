@@ -7,12 +7,15 @@ export default defineConfig({
     react(),
   ],
   build: {
+    // Increase chunk size limit since we are using a premium UI with many components
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      maxParallelFileOps: 5 // Lowered further to be extremely safe
-    },
-    commonjsOptions: {
-      // Monaco is ESM; excluding it from CommonJS processing saves thousands of file scans
-      exclude: [/node_modules\/monaco-editor/]
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['lucide-react']
+        }
+      }
     }
   },
   server: {
