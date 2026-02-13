@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE } from '../../shared/utils/api';
 import { BookOpen, Clock, CheckCircle2, Lock, Play, ChevronDown, ChevronUp } from 'lucide-react';
 
 /**
@@ -54,7 +55,7 @@ const TopicTile = ({ topic, onExerciseStart, authToken }) => {
         if (!authToken) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/progress/topics/${topic.topic_id}/progress`, {
+            const res = await fetch(`${API_BASE}/api/progress/topics/${topic.topic_id}/progress`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ const TopicTile = ({ topic, onExerciseStart, authToken }) => {
 
                 // Log activity if some progress made
                 if (scrollDepth > 0.1 || timeSpent > 30) {
-                    fetch(`${import.meta.env.VITE_API_BASE}/api/progress/activity`, {
+                    fetch(`${API_BASE}/api/progress/activity`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     }).catch(e => { });

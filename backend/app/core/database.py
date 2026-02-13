@@ -8,6 +8,10 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 import datetime
 import os
+from dotenv import load_dotenv
+
+# Load .env file if it exists
+load_dotenv()
 
 Base = declarative_base()
 
@@ -288,7 +292,25 @@ _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 _BASE_DB_PATH = os.path.join(_BACKEND_DIR, "unstoppable_minds.db")
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{_BASE_DB_PATH}")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# MySQL transition: If URL starts with mysql, ensure it uses pymysql driver
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+
+# SQLite needs check_same_thread: False for FastAPI
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+elif "mysql" in DATABASE_URL:
+    # Production SSL Configuration for remote MySQL
+    ssl_ca = os.getenv("DB_SSL_CA")
+    if ssl_ca and os.path.exists(ssl_ca):
+        connect_args = {
+            "ssl": {
+                "ca": ssl_ca
+            }
+        }
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 Base.metadata.create_all(engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

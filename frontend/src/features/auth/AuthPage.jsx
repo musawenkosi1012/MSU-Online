@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE } from '../../shared/utils/api';
 import { Mail, Lock, User, ArrowRight, ShieldCheck, CreditCard, Building, Calendar, Phone, Hash, Users, Sparkles, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 
 const Auth = ({ onLogin }) => {
@@ -72,7 +73,7 @@ const Auth = ({ onLogin }) => {
         }
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE}${endpoint}`, {
+            const response = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

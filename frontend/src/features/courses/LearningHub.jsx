@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     FlaskConical,
     FileText,
@@ -16,6 +16,7 @@ import {
     Zap,
     Terminal
 } from 'lucide-react';
+import { API_BASE } from '../../shared/utils/api';
 import TopicTile from './TopicTile';
 
 const LearningHub = ({ courses, onOpenTextbook, onOpenCodingLab }) => {
@@ -38,7 +39,7 @@ const LearningHub = ({ courses, onOpenTextbook, onOpenCodingLab }) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/courses/${selectedCourse}/outline`, {
+            const res = await fetch(`${API_BASE}/api/courses/${selectedCourse}/outline`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -54,7 +55,7 @@ const LearningHub = ({ courses, onOpenTextbook, onOpenCodingLab }) => {
         if (!authToken) return;
         try {
             // Corrected endpoint from /api/courses/ to /api/progress/course/
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/progress/course/${selectedCourse}/mastery`, {
+            const res = await fetch(`${API_BASE}/api/progress/course/${selectedCourse}/mastery`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (res.ok) {
@@ -77,7 +78,7 @@ const LearningHub = ({ courses, onOpenTextbook, onOpenCodingLab }) => {
         if (!topicsMap[moduleId]) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/modules/${moduleId}/topics`, {
+                const res = await fetch(`${API_BASE}/api/modules/${moduleId}/topics`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();

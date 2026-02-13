@@ -25,6 +25,15 @@ from app.features.voice.service import init_voice_service
 from app.shared.model_service import model_service
 init_voice_service(model_service)
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+# Initialize Limiter
+limiter = Limiter(key_func=get_remote_address)
+
 def create_app() -> FastAPI:
     """Application factory."""
     app = FastAPI(
@@ -33,10 +42,16 @@ def create_app() -> FastAPI:
         version="2.0.0"
     )
 
-    # CORS for frontend
+    # Rate Limiting configuration
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # CORS configuration - Dynamically load from .env in production
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -44,7 +59,8 @@ def create_app() -> FastAPI:
 
     # Health check
     @app.get("/health")
-    def health_check():
+    @limiter.limit("20/minute")
+    def health_check(request: Request):
         return {"status": "healthy", "version": "2.0.0"}
 
     # Mount feature routers

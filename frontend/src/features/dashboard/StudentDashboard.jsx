@@ -11,8 +11,8 @@ import {
     GraduationCap
 } from 'lucide-react';
 import { useGpaScale } from '../../hooks/useGpaScale';
-import GradingBreakdown from '../assessment/GradingBreakdown';
 import { getMasteryBadge } from '../../shared/utils/mastery';
+import { API_BASE } from '../../shared/utils/api';
 
 const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown, streak }) => {
     const { formatGpa, getGradeLabel } = useGpaScale();
@@ -28,7 +28,7 @@ const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, mode
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/ai/next-topic/${courseId}`, {
+            const res = await fetch(`${API_BASE}/api/ai/next-topic/${courseId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.status === 401) return;

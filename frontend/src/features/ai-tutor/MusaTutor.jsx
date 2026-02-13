@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_BASE } from '../../shared/utils/api';
 import { Bot, Sparkles, Search, Mic, Send, Loader2, Zap } from 'lucide-react';
 
 const MusaTutor = ({
@@ -23,7 +24,7 @@ const MusaTutor = ({
         setIsSyncing(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/ai/index/course`, {
+            const res = await fetch(`${API_BASE}/api/ai/index/course`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ const MusaTutor = ({
     const fetchRagStats = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/ai/rag/stats`, {
+            const res = await fetch(`${API_BASE}/api/ai/rag/stats`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -110,7 +111,7 @@ const MusaTutor = ({
                 const base64Audio = reader.result;
                 try {
                     const token = localStorage.getItem('token');
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/voice/stt`, {
+                    const res = await fetch(`${API_BASE}/api/voice/stt`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -149,7 +150,7 @@ const MusaTutor = ({
         const playTts = async (text) => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/voice/tts`, {
+                const res = await fetch(`${API_BASE}/api/voice/tts`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

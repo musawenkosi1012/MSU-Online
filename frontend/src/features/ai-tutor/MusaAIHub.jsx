@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE } from '../../shared/utils/api';
 import {
     MessageCircle,
     GraduationCap,
@@ -77,7 +78,7 @@ const MusaAIHub = ({ courses }) => {
     const fetchEnrolledCourses = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/courses/enrolled`, {
+            const res = await fetch(`${API_BASE}/api/courses/enrolled`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -118,7 +119,7 @@ const MusaAIHub = ({ courses }) => {
         if (!selectedCourse) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/courses/${selectedCourse}/outline`, {
+            const res = await fetch(`${API_BASE}/api/courses/${selectedCourse}/outline`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -145,7 +146,7 @@ const MusaAIHub = ({ courses }) => {
         if (!selectedCourse) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/ai/revision-questions?course_id=${selectedCourse}`, {
+            const res = await fetch(`${API_BASE}/api/ai/revision-questions?course_id=${selectedCourse}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -189,7 +190,7 @@ const MusaAIHub = ({ courses }) => {
                     topic_id: selectedTopic ? String(selectedTopic) : null
                 };
 
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}${endpoint}`, {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -290,7 +291,7 @@ const MusaAIHub = ({ courses }) => {
         try {
             // Try backend TTS first for premium Musa voice
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/voice/tts`, {
+            const res = await fetch(`${API_BASE}/api/voice/tts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -329,7 +330,7 @@ const MusaAIHub = ({ courses }) => {
 
         setIsLoading(true);
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/ai/interactive`, {
+            const res = await fetch(`${API_BASE}/api/ai/interactive`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

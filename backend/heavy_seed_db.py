@@ -4,9 +4,13 @@ import json
 import random
 import datetime
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add backend directory to path so we can import app
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend"))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.database import db_session, Course, Module, SubTopic, User, Enrollment, Note, ActivityLog, Assessment
 from app.features.auth.service import auth_service

@@ -17,6 +17,7 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
+import { API_BASE } from '../../shared/utils/api';
 
 const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, chatHistory, aiLoading }) => {
     const [query, setQuery] = useState('');
@@ -37,8 +38,7 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
         setCacheLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-            const res = await fetch(`${baseUrl}/api/research/cache`, {
+            const res = await fetch(`${API_BASE}/api/research/cache`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -53,8 +53,7 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
     const handleClearCache = async () => {
         try {
             const token = localStorage.getItem('token');
-            const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-            await fetch(`${baseUrl}/api/research/cache`, {
+            const res = await fetch(`${API_BASE}/api/research/cache`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -82,8 +81,7 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
 
         try {
             const token = localStorage.getItem('token');
-            const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-            const res = await fetch(`${baseUrl}/api/research/deep-essay`, {
+            const res = await fetch(`${API_BASE}/api/research/deep-essay`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

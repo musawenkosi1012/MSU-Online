@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE } from './shared/utils/api';
 import { Loader2 } from 'lucide-react';
 import './index.css';
 
@@ -39,6 +40,7 @@ import StudyNotebook from './features/notebook/StudyNotebook';
 import RepositoryView from './features/notebook/RepositoryView';
 import CodingIDE from './features/coding/CodingIDE';
 import SettingsManager from './features/settings/SettingsManager';
+import { API_BASE } from './shared/utils/api';
 
 
 const App = () => {
@@ -114,7 +116,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/api/progress/streak`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -129,7 +131,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const baseUrl = API_BASE;
       await fetch(`${baseUrl}/api/progress/activity`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -482,7 +484,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/api/courses/${courseId}/enroll`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
