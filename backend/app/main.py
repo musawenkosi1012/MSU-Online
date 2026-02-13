@@ -2,8 +2,13 @@
 EduNexus Backend API
 Refactored modular architecture with feature-based routers.
 """
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Load .env file
+load_dotenv()
 
 # Feature routers
 from app.features.auth.router import router as auth_router
@@ -46,8 +51,11 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    # CORS configuration - Dynamically load from .env in production
-    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+    # CORS configuration - Robust parsing to handle quotes and whitespace
+    raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+    # Strip leading/trailing quotes often added in .env files
+    raw_origins = raw_origins.strip('"').strip("'")
+    allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
     
     app.add_middleware(
         CORSMiddleware,
@@ -56,6 +64,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    print(f"[CORS] Allowed Origins: {allowed_origins}")
 
     # Health check
     @app.get("/health")

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
+import { API_BASE } from '../../shared/utils/api';
 
 // Use default CDN loader for better reliability in varying environments
 // unless strictly required to be offline.
@@ -31,10 +32,7 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
     const fetchLesson = async () => {
         try {
             const token = localStorage.getItem('token');
-            const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-            console.log(`[CodingLab] Fetching lesson: ${lessonId} from ${apiBase}`);
-
-            const res = await fetch(`${apiBase}/api/coding/lessons/${lessonId}`, {
+            const res = await fetch(`${API_BASE}/api/coding/lessons/${lessonId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -62,7 +60,7 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
         setIsRunning(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/coding/run`, {
+            const res = await fetch(`${API_BASE}/api/coding/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +85,7 @@ const CodingIDE = ({ lessonId = 'py_loops_01', onBack }) => {
         setIsRunning(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/coding/submit`, {
+            const res = await fetch(`${API_BASE}/api/coding/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

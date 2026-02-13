@@ -40,7 +40,6 @@ import StudyNotebook from './features/notebook/StudyNotebook';
 import RepositoryView from './features/notebook/RepositoryView';
 import CodingIDE from './features/coding/CodingIDE';
 import SettingsManager from './features/settings/SettingsManager';
-import { API_BASE } from './shared/utils/api';
 
 
 const App = () => {
@@ -116,8 +115,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = API_BASE;
-      const res = await fetch(`${baseUrl}/api/progress/streak`, {
+      const res = await fetch(`${API_BASE}/api/progress/streak`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -131,8 +129,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = API_BASE;
-      await fetch(`${baseUrl}/api/progress/activity`, {
+      await fetch(`${API_BASE}/api/progress/activity`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -142,8 +139,7 @@ const App = () => {
   const fetchModelStatus = async () => {
     try {
       const token = localStorage.getItem('token');
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/ai/analytics`, {
+      const res = await fetch(`${API_BASE}/api/ai/analytics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) return;
@@ -155,8 +151,7 @@ const App = () => {
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/notes`, {
+      const res = await fetch(`${API_BASE}/api/notes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -169,8 +164,7 @@ const App = () => {
   const handleSaveNotes = async (content, title = null) => {
     try {
       const token = localStorage.getItem('token');
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      await fetch(`${baseUrl}/api/notes`, {
+      await fetch(`${API_BASE}/api/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,18 +181,17 @@ const App = () => {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
       const targetCourseId = courseIdOverride || selectedCourseId;
       // Skip course specific mastery if no course selected, or use a safe check
       const masteryReq = targetCourseId
-        ? fetch(`${baseUrl}/api/progress/course/${targetCourseId}/mastery`, { headers })
-        : Promise.resolve({ json: () => ({}) }); // No-op if no course
+        ? fetch(`${API_BASE}/api/progress/course/${targetCourseId}/mastery`, { headers })
+        : Promise.resolve({ json: () => Promise.resolve({}) }); // No-op if no course
 
       const [masteryRes, gpaRes, scaleRes, breakdownRes] = await Promise.all([
         masteryReq,
-        fetch(`${baseUrl}/api/assessment/gpa`, { headers }),
-        fetch(`${baseUrl}/api/assessment/gpa/scale`, { headers }),
-        fetch(`${baseUrl}/api/assessment/gpa/breakdown`, { headers })
+        fetch(`${API_BASE}/api/assessment/gpa`, { headers }),
+        fetch(`${API_BASE}/api/assessment/gpa/scale`, { headers }),
+        fetch(`${API_BASE}/api/assessment/gpa/breakdown`, { headers })
       ]);
 
       const mData = await masteryRes.json().catch(() => ({}));
@@ -219,9 +212,8 @@ const App = () => {
 
   const fetchFeaturedAndCategories = async () => {
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const featuredRes = await fetch(`${baseUrl}/api/courses/featured`);
-      const catRes = await fetch(`${baseUrl}/api/courses/categories`);
+      const featuredRes = await fetch(`${API_BASE}/api/courses/featured`);
+      const catRes = await fetch(`${API_BASE}/api/courses/categories`);
 
       if (featuredRes.ok) {
         const fData = await featuredRes.json();
@@ -242,9 +234,7 @@ const App = () => {
       if (!token) return null;
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-
-      let allUrl = `${baseUrl}/api/courses`;
+      let allUrl = `${API_BASE}/api/courses`;
       const params = new URLSearchParams();
 
       const cat = category !== null ? category : activeCategory;
@@ -258,7 +248,7 @@ const App = () => {
 
       const [allRes, enrolledRes] = await Promise.all([
         fetch(allUrl, { headers }),
-        fetch(`${baseUrl}/api/courses/enrolled`, { headers })
+        fetch(`${API_BASE}/api/courses/enrolled`, { headers })
       ]);
 
       let activeCourseId = selectedCourseId;
@@ -292,8 +282,7 @@ const App = () => {
     setSelectedCourseDetail(null); // Clear old detail
     try {
       const token = localStorage.getItem('token');
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/courses/${id}`, {
+      const res = await fetch(`${API_BASE}/api/courses/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -309,8 +298,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !selectedCourseId) return;
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const response = await fetch(`${baseUrl}/api/courses/${selectedCourseId}/repository`, {
+      const response = await fetch(`${API_BASE}/api/courses/${selectedCourseId}/repository`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) return;
@@ -336,8 +324,7 @@ const App = () => {
   const fetchVoiceGreeting = async (sid) => {
     try {
       const token = localStorage.getItem('token');
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/voice/greeting?session_id=${sid}`, {
+      const res = await fetch(`${API_BASE}/api/voice/greeting?session_id=${sid}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -358,8 +345,7 @@ const App = () => {
       let context = "";
       if (isResearchMode || forceResearch) {
         const token = localStorage.getItem('token');
-        const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-        const researchRes = await fetch(`${baseUrl}/api/research/scrape`, {
+        const researchRes = await fetch(`${API_BASE}/api/research/scrape`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -382,8 +368,7 @@ const App = () => {
         'Authorization': `Bearer ${token}`
       };
 
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const endpoint = isVoiceActive ? `${baseUrl}/api/voice/chat` : `${baseUrl}/api/ai/chat`;
+      const endpoint = isVoiceActive ? `${API_BASE}/api/voice/chat` : `${API_BASE}/api/ai/chat`;
       const body = isVoiceActive
         ? { text: textToSend, session_id: String(voiceSessionId) }
         : {
@@ -417,8 +402,7 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/student/exam/${selectedCourseId}?count=5`, {
+      const res = await fetch(`${API_BASE}/api/student/exam/${selectedCourseId}?count=5`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) return;
@@ -434,8 +418,7 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/assessment/${assessmentId}`, {
+      const res = await fetch(`${API_BASE}/api/assessment/${assessmentId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Failed to load assessment");
@@ -457,8 +440,7 @@ const App = () => {
     if (!token) return;
     setAiLoading(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/assessment/final-exam/${courseId}`, {
+      const res = await fetch(`${API_BASE}/api/assessment/final-exam/${courseId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -484,8 +466,7 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = API_BASE;
-      const res = await fetch(`${baseUrl}/api/courses/${courseId}/enroll`, {
+      const res = await fetch(`${API_BASE}/api/courses/${courseId}/enroll`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

@@ -290,7 +290,18 @@ class GeneratedContent(Base):
 # Handle DB path dynamically for Render (Linux) and Local (Windows)
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _BASE_DB_PATH = os.path.join(_BACKEND_DIR, "unstoppable_minds.db")
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{_BASE_DB_PATH}")
+
+# Try to build from individual vars first
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT", "4000")
+DB_NAME = os.getenv("DB_NAME", "msu_online")
+
+if all([DB_USER, DB_PASS, DB_HOST]):
+    DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+else:
+    DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{_BASE_DB_PATH}")
 
 # MySQL transition: If URL starts with mysql, ensure it uses pymysql driver
 if DATABASE_URL.startswith("mysql://"):
@@ -301,16 +312,41 @@ connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 elif "mysql" in DATABASE_URL:
-    # Production SSL Configuration for remote MySQL
+    # Production SSL Configuration for remote MySQL (TiDB Cloud)
     ssl_ca = os.getenv("DB_SSL_CA")
+    if ssl_ca:
+        # Resolve relative path to absolute
+        if not os.path.isabs(ssl_ca):
+            # Try both raw and backend-dir joined
+            potential_paths = [
+                os.path.abspath(ssl_ca),
+                os.path.join(_BACKEND_DIR, ssl_ca),
+                os.path.join(_BACKEND_DIR, "certs", os.path.basename(ssl_ca))
+            ]
+            for p in potential_paths:
+                if os.path.exists(p):
+                    ssl_ca = p
+                    break
+            
     if ssl_ca and os.path.exists(ssl_ca):
+        print(f"[DATABASE] Using SSL CA: {ssl_ca}")
         connect_args = {
             "ssl": {
-                "ca": ssl_ca
+                "ca": ssl_ca,
+                "check_hostname": False  # Often needed for TiDB dynamic gateways
             }
         }
+    else:
+        print("[DATABASE] WARNING: No SSL CA found. TiDB connection might fail.")
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args=connect_args,
+    pool_pre_ping=True,      # Automatically reconnect if connection is lost
+    pool_recycle=300,        # Recycle connections every 5 minutes (prevents TiDB idle timeout)
+    pool_size=5,             # Standard pool size
+    max_overflow=10          # Allow some growth
+)
 Base.metadata.create_all(engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

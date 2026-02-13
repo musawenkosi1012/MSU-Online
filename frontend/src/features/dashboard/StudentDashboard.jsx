@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useGpaScale } from '../../hooks/useGpaScale';
 import { getMasteryBadge } from '../../shared/utils/mastery';
+import GradingBreakdown from '../assessment/GradingBreakdown';
 import { API_BASE } from '../../shared/utils/api';
 
 const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown, streak }) => {
