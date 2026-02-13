@@ -1,18 +1,16 @@
-# Choreo Component Configuration
-# This file helps Choreo auto-configure the Python service.
-
+apiVersion: 1.1
 component:
   # Type of the component: service, webhook, or scheduled-task
   type: service
-  
+
   # Base image is handled by Dockerfile, but name is useful
   name: msu-online-backend
-  
+
   # Build configuration
   build:
     context: .
     dockerfile: Dockerfile
-  
+
   # Endpoint configuration
   endpoints:
     - name: backend-api
@@ -21,18 +19,16 @@ component:
       type: REST
       network:
         visibility: Public
-  
-  # Environment Variables (Placeholders - Set actual values in Choreo Console)
+      healthCheck:
+        path: /health
+        initialDelaySeconds: 10
+        periodSeconds: 10
+
+  # Environment Variables
   env:
     - name: USE_MOCK_LLM
       value: "false"
     - name: DATABASE_URL
       value: "sqlite:////app/data/unstoppable_minds.db"
-    - name: OPENAI_API_KEY
-      value: "" # Optional
-    - name: GEMINI_API_KEY
-      value: "" # Optional
-    - name: ANTHROPIC_API_KEY
-      value: "" # Optional
-    - name: MUSA_API_URL
-      value: "" # Optional (Kaggle URL)
+    - name: PORT
+      value: "8080"

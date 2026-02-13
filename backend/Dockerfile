@@ -13,6 +13,9 @@ RUN addgroup --gid 10014 choreo && \
 # Set directory
 WORKDIR /app
 
+# Create data directory for SQLite
+RUN mkdir -p /app/data && chown -R 10014:10014 /app/data
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
