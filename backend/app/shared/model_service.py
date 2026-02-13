@@ -101,20 +101,35 @@ class ModelService:
             print(f"Activating DeepSeek Reasoning Engine from {MODEL_PATH}...")
             self.is_loading = True
         try:
-            # Check for Mock Mode (Essential for low-RAM Render Free)
+            # Check for Mock Mode
             if os.environ.get("USE_MOCK_LLM", "false").lower() == "true":
-                print("[SYSTEM] Running in MOCK AI Mode (No GGUF file needed)")
+                print("[SYSTEM] Running in MOCK AI Mode")
                 self.llm = "MOCK"
                 self.is_loading = False
                 return True
 
+            # Check for OpenAI API (GPT-4/GPT-5)
+            # This fundamentally changes the knowledge base access pattern to API-based
+            openai_key = os.environ.get("OPENAI_API_KEY")
+            if openai_key:
+                try:
+                    from openai import OpenAI
+                    self.openai_client = OpenAI(api_key=openai_key)
+                    self.openai_model = os.environ.get("OPENAI_MODEL", "gpt-4o")
+                    self.llm = "OPENAI"
+                    print(f"[SYSTEM] Connected to OpenAI API (Model: {self.openai_model})")
+                    self.is_loading = False
+                    return True
+                except Exception as e:
+                    print(f"[ERROR] Failed to initialize OpenAI client: {e}")
+
+            # Fallback to Local/Remote GGUF
             # Performance tuning for prompt ingestion and generation
             import os
             cpu_count = os.cpu_count() or 4
-            # Use physical cores (estimate as half of logical if logically high)
             threads = max(4, cpu_count // 2) if cpu_count > 8 else cpu_count
             
-            # Check if file exists before trying to load (avoids hard crash)
+            # Check if file exists
             if not os.path.exists(MODEL_PATH):
                 print(f"[WARNING] Model file not found at {MODEL_PATH}. Switching to Mock Mode.")
                 self.llm = "MOCK"
@@ -333,32 +348,68 @@ If issues found, provide a corrected answer. If accurate, confirm:"""
                 return "I'm having trouble loading my AI brain. Please try again."
 
 
-        # Handle Mock Mode
-        if self.llm == "MOCK":
+
+        # 1. Check for OpenAI API (Primary)
+        if self.llm == "OPENAI":
+            try:
+                # Use GPT-4o/5 for superior reasoning
+                response = self.openai_client.chat.completions.create(
+                    model=self.openai_model,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=max_tokens,
+                    temperature=0.3
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                print(f"[AI] OpenAI Error: {e}")
+                return "I'm having trouble connecting to the OpenAI cloud. Please try again."
+
+        # 2. Check for Remote API (Kaggle/Colab Hosted)
+        remote_url = os.environ.get("MUSA_API_URL")
+        if remote_url and remote_url.startswith("http"):
+            try:
+                import requests
+                print(f"[AI] Calling Remote Engine: {remote_url}...")
+                response = requests.post(f"{remote_url}/generate", json={
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": 0.3,
+                    "stop": ["[STUDENT]", "System:", "\n\n\n\n"]
+                }, timeout=30) # 30s timeout
+                
+                if response.status_code == 200:
+                    text = response.json().get("text", "").strip()
+                    if text: return text
+                print(f"[AI] Remote failed: {response.text}. Falling back.")
+            except Exception as e:
+                print(f"[AI] Remote connection error: {e}. Falling back to Mock/Local.")
+
+        # 2. Handle Mock Mode fallback
+        if self.llm == "MOCK" or (not self.llm and not remote_url):
             import time, json
-            time.sleep(1.0) # Simulate thinking
-            print(f"[MOCK AI] Generating response for prompt prefix: {prompt[:50]}...")
+            if not remote_url: time.sleep(1.0) # Simulate delay only if not already waited for network
             
             # Simple keyword-based responses
             lower_prompt = prompt.lower()
             if "hello" in lower_prompt or "hi " in lower_prompt:
                 return "Hello! I'm Musa, your AI Tutor. How can I help you with your studies today?"
             elif "grade" in lower_prompt and "json" in lower_prompt:
-                # Mock grading logic
                 return json.dumps({
                     "rubric": {"correctness": 88, "reasoning": 85, "completeness": 90, "clarity": 95},
                     "score": 89,
                     "feedback": "This is a great answer! You covered the main points clearly. (Mock Feedback)"
                 })
             elif "exam" in lower_prompt and "json" in lower_prompt:
-                # Mock exam generation
                 return json.dumps({
                     "mcqs": [{"question": "What is Python?", "options": ["Snake", "Language", "Car"], "answer": "Language"} for _ in range(5)],
                     "open_ended": [{"question": "Explain recursion.", "marks": 10} for _ in range(2)],
                     "coding_prompt": "Write a function to add two numbers."
                 })
             else:
-                return f"This is a simulated AI response from the Mock Engine. I received your request about: {prompt[:30]}..."
+                return f"This is a simulated AI response. (Remote Engine at {remote_url or 'None'} unavailable). Request: {prompt[:30]}..."
 
         try:
             print(f"[AI] Generating response for prompt length: {len(prompt)} chars...")
