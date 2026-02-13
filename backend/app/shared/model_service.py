@@ -108,23 +108,64 @@ class ModelService:
                 self.is_loading = False
                 return True
 
-            # Check for OpenAI API (GPT-4/GPT-5)
-            # This fundamentally changes the knowledge base access pattern to API-based
+            # 1. DeepSeek API (OpenAI Compatible)
+            deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
+            if deepseek_key:
+                try:
+                    from openai import OpenAI
+                    self.openai_client = OpenAI(api_key=deepseek_key, base_url="https://api.deepseek.com")
+                    self.openai_model = "deepseek-chat"
+                    self.llm = "OPENAI" # Uses same client logic
+                    print(f"[SYSTEM] Connected to DeepSeek API")
+                    self.is_loading = False
+                    return True
+                except Exception as e:
+                    print(f"[ERROR] Failed to initialize DeepSeek client: {e}")
+
+            # 2. Google Gemini API
+            gemini_key = os.environ.get("GEMINI_API_KEY")
+            if gemini_key:
+                try:
+                    import google.generativeai as genai
+                    genai.configure(api_key=gemini_key)
+                    self.gemini_model = genai.GenerativeModel('gemini-pro')
+                    self.llm = "GEMINI"
+                    print(f"[SYSTEM] Connected to Google Gemini API")
+                    self.is_loading = False
+                    return True
+                except Exception as e:
+                    print(f"[ERROR] Failed to initialize Gemini client: {e}")
+
+            # 3. Anthropic (Claude) API
+            anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+            if anthropic_key:
+                try:
+                    import anthropic
+                    self.anthropic_client = anthropic.Anthropic(api_key=anthropic_key)
+                    self.anthropic_model = "claude-3-opus-20240229"
+                    self.llm = "ANTHROPIC"
+                    print(f"[SYSTEM] Connected to Anthropic Claude API")
+                    self.is_loading = False
+                    return True
+                except Exception as e:
+                    print(f"[ERROR] Failed to initialize Anthropic client: {e}")
+
+            # 4. Standard/Generic OpenAI API (GPT-4 / OpenRouter / Etc)
             openai_key = os.environ.get("OPENAI_API_KEY")
             if openai_key:
                 try:
                     from openai import OpenAI
-                    self.openai_client = OpenAI(api_key=openai_key)
+                    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+                    self.openai_client = OpenAI(api_key=openai_key, base_url=base_url)
                     self.openai_model = os.environ.get("OPENAI_MODEL", "gpt-4o")
                     self.llm = "OPENAI"
-                    print(f"[SYSTEM] Connected to OpenAI API (Model: {self.openai_model})")
+                    print(f"[SYSTEM] Connected to OpenAI/Compatible API (Model: {self.openai_model})")
                     self.is_loading = False
                     return True
                 except Exception as e:
                     print(f"[ERROR] Failed to initialize OpenAI client: {e}")
 
             # Fallback to Local/Remote GGUF
-            # Performance tuning for prompt ingestion and generation
             import os
             cpu_count = os.cpu_count() or 4
             threads = max(4, cpu_count // 2) if cpu_count > 8 else cpu_count
@@ -349,10 +390,10 @@ If issues found, provide a corrected answer. If accurate, confirm:"""
 
 
 
-        # 1. Check for OpenAI API (Primary)
+        # 1. OpenAI / DeepSeek / Generic API
         if self.llm == "OPENAI":
             try:
-                # Use GPT-4o/5 for superior reasoning
+                # Optimized for GPT-4o, DeepSeek-V3, etc.
                 response = self.openai_client.chat.completions.create(
                     model=self.openai_model,
                     messages=[
@@ -364,10 +405,45 @@ If issues found, provide a corrected answer. If accurate, confirm:"""
                 )
                 return response.choices[0].message.content.strip()
             except Exception as e:
-                print(f"[AI] OpenAI Error: {e}")
-                return "I'm having trouble connecting to the OpenAI cloud. Please try again."
+                print(f"[AI] OpenAI/DeepSeek Error: {e}")
+                return "I'm having trouble connecting to the AI cloud. Please try again."
 
-        # 2. Check for Remote API (Kaggle/Colab Hosted)
+        # 2. Google Gemini
+        if self.llm == "GEMINI":
+            try:
+                # Gemini Pro Generation
+                # Note: Gemini system instructions are usually set at model init, but prompt engineering works too
+                full_prompt = f"{SYSTEM_PROMPT}\n\nUser Question: {prompt}"
+                response = self.gemini_model.generate_content(
+                    full_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=max_tokens,
+                        temperature=0.3
+                    )
+                )
+                return response.text.strip()
+            except Exception as e:
+                print(f"[AI] Gemini Error: {e}")
+                return "I'm having trouble connecting to Google Gemini. Please try again."
+
+        # 3. Anthropic Claude
+        if self.llm == "ANTHROPIC":
+            try:
+                message = self.anthropic_client.messages.create(
+                    model=self.anthropic_model,
+                    max_tokens=max_tokens,
+                    temperature=0.3,
+                    system=SYSTEM_PROMPT,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                return message.content[0].text.strip()
+            except Exception as e:
+                print(f"[AI] Claude Error: {e}")
+                return "I'm having trouble connecting to Anthropic Claude. Please try again."
+
+        # 4. Check for Remote API (Kaggle/Colab Hosted)
         remote_url = os.environ.get("MUSA_API_URL")
         if remote_url and remote_url.startswith("http"):
             try:
