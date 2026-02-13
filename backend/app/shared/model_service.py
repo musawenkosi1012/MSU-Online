@@ -13,8 +13,8 @@ from app.core.rag.retriever import retriever
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # For Render, files are usually in /opt/render/project/src/backend/
 # We will look for the model in the project root if backend is subdirectory
-_PROJECT_ROOT = os.path.dirname(_BACKEND_DIR)
-_DEFAULT_MODEL = os.path.join(_PROJECT_ROOT, "MSU Online.gguf")
+_PROJECT_ROOT = _BACKEND_DIR # Simplified: Model lives in backend dir now
+_DEFAULT_MODEL = os.path.join(_BACKEND_DIR, "MSU Online.gguf")
 MODEL_PATH = os.environ.get("MODEL_PATH", _DEFAULT_MODEL)
 
 # ============================================

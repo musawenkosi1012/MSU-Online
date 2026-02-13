@@ -10,7 +10,7 @@ component:
   
   # Build configuration
   build:
-    context: backend
+    context: .
     dockerfile: Dockerfile
   
   # Endpoint configuration
