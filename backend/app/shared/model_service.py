@@ -326,6 +326,10 @@ If issues found, provide a corrected answer. If accurate, confirm:"""
     # CORE GENERATION
     # ============================================
 
+    def generate_response(self, prompt: str, max_tokens: int = 500) -> str:
+        """Public wrapper for content generation."""
+        return self._generate(prompt, max_tokens)
+
     def _generate(self, prompt: str, max_tokens: int = 500) -> str:
         """Internal generation method using APIs."""
         if not self.llm:
