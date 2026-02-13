@@ -203,63 +203,72 @@ Tutor:"""
         return "I hear you. Tell me more about what you'd like to learn, and I'll do my best to help explain it."
     
     def text_to_speech(self, text: str, voice: str = "default") -> Dict:
-        """Convert text to speech using Coqui TTS."""
+        """Convert text to speech using OpenAI API."""
         try:
-            try:
-                from TTS.api import TTS
-                import torch
-            except ImportError:
+            openai_key = os.environ.get("OPENAI_API_KEY")
+            if not openai_key:
                 return {
                     "status": "error",
-                    "message": "Coqui TTS not installed. Falling back to browser speech synthesis."
+                    "message": "OpenAI API key not found. Please use browser speech synthesis."
                 }
             
-            # Lazy load TTS model
-            model_name = "tts_models/en/vctk/vits"
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            from openai import OpenAI
+            client = OpenAI(api_key=openai_key)
             
-            # In production, we'd cache this instance
-            tts = TTS(model_name).to(device)
-            
-            output_path = f"data/voice/tts_{hash(text)}.wav"
+            # Map voices
+            voice_map = {
+                "p225": "alloy",
+                "p226": "nova",
+                "p227": "onyx",
+                "default": "shimmer"
+            }
+            target_voice = voice_map.get(voice, "shimmer")
+
+            output_path = f"data/voice/tts_{hash(text)}.mp3"
             os.makedirs("data/voice", exist_ok=True)
             
-            tts.tts_to_file(text=text, file_path=output_path)
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice=target_voice,
+                input=text
+            )
+            response.stream_to_file(output_path)
             
             return {
                 "status": "success",
                 "text": text,
-                "audio_url": f"http://localhost:8000/api/voice/stream/{os.path.basename(output_path)}"
+                "audio_url": f"/api/voice/stream/{os.path.basename(output_path)}"
             }
         except Exception as e:
             print(f"TTS Error: {e}")
-            return {"status": "error", "message": str(e)}
+            return {"status": "error", "message": "API Speech failed. Use browser default."}
 
     def speech_to_text(self, audio_file_path: str) -> Dict:
-        """Convert speech to text using OpenAI Whisper."""
+        """Convert speech to text using OpenAI Whisper API."""
         try:
-            try:
-                import whisper
-            except ImportError:
-                return {
-                    "status": "error", 
-                    "message": "Whisper STT not installed. Please use browser speech recognition."
-                }
+            openai_key = os.environ.get("OPENAI_API_KEY")
+            if not openai_key:
+                return {"status": "error", "message": "API key not found."}
             
-            # Lazy load model
-            model = whisper.load_model("base")
-            result = model.transcribe(audio_file_path)
+            from openai import OpenAI
+            client = OpenAI(api_key=openai_key)
+            
+            with open(audio_file_path, "rb") as audio_file:
+                transcript = client.audio.transcriptions.create(
+                    model="whisper-1", 
+                    file=audio_file
+                )
             
             return {
                 "status": "success",
-                "text": result["text"]
+                "text": transcript.text
             }
         except Exception as e:
             print(f"STT Error: {e}")
             return {"status": "error", "message": str(e)}
 
     def get_voices(self) -> List[Dict]:
-        """Get available voices (VITS models support multiple speakers)."""
+        """Get available cloud voices."""
         return [
             {"id": "p225", "name": "Prof. Musa (Clear)"},
             {"id": "p226", "name": "Mbuya (Warm)"},
