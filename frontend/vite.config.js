@@ -10,12 +10,24 @@ export default defineConfig({
     // Increase chunk size limit since we are using a premium UI with many components
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
+      external: ['monaco-editor'],
+      maxParallelFileOps: 1, // Be as conservative as possible
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           ui: ['lucide-react']
         }
       }
+    },
+    commonjsOptions: {
+      exclude: [/node_modules\/monaco-editor/, /monaco-editor/]
+    }
+  },
+  optimizeDeps: {
+    exclude: ['monaco-editor']
+  },
+  resolve: {
+    alias: {
     }
   },
   server: {
