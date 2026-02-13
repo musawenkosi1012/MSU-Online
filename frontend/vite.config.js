@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  build: {
+    rollupOptions: {
+      maxParallelFileOps: 20 // Limit parallel file operations to prevent EMFILE error
+    }
+  },
   server: {
     port: process.env.PORT || 5173,
     strictPort: false,
