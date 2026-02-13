@@ -8,7 +8,11 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
-      maxParallelFileOps: 20 // Limit parallel file operations to prevent EMFILE error
+      maxParallelFileOps: 5 // Lowered further to be extremely safe
+    },
+    commonjsOptions: {
+      // Monaco is ESM; excluding it from CommonJS processing saves thousands of file scans
+      exclude: [/node_modules\/monaco-editor/]
     }
   },
   server: {
