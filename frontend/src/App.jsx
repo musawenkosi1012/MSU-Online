@@ -77,6 +77,8 @@ const App = () => {
   const [gradingBreakdown, setGradingBreakdown] = useState(null);
   const [streak, setStreak] = useState(0);
   const [activeLessonId, setActiveLessonId] = useState('py_loops_01');
+  const [nextTopic, setNextTopic] = useState(null);
+  const [ragStats, setRagStats] = useState(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -111,52 +113,55 @@ const App = () => {
     }
   }, []);
 
-  const fetchStreak = async () => {
+  const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch(`${API_BASE}/api/progress/streak`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_BASE}/api/agents/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ agent: 'dashboard' })
       });
       if (res.ok) {
         const data = await res.json();
+        // Simply accept and set data without processing
+        setMastery(data.mastery);
+        setGpaData(data.gpa);
+        setGradeHistory(data.gpa?.courses || []);
+        setGradeScale(data.scale);
+        setGradingBreakdown(data.breakdown);
         setStreak(data.streak);
+        setEnrolledCourses(data.enrolled_courses);
+        setModelStatus(data.model_status);
+        setNextTopic(data.next_topic);
+        setRagStats(data.rag_stats);
+
+        if (!selectedCourseId && data.enrolled_courses.length > 0) {
+          setSelectedCourseId(data.enrolled_courses[0].id);
+        }
       }
-    } catch (err) { console.error("Error fetching streak", err); }
-  };
-
-  const logActivity = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      await fetch(`${API_BASE}/api/progress/activity`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } catch (err) { console.error("Error logging activity", err); }
-  };
-
-  const fetchModelStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/ai/analytics`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.status === 401) return;
-      const data = await res.json();
-      setModelStatus({ loaded: true, loading: false, metrics: data });
-    } catch (err) { console.error("Error fetching model status", err); }
+    } catch (err) {
+      console.error("Error fetching agent data", err);
+    }
   };
 
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/notes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_BASE}/api/agents/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ agent: 'storage', action: 'fetch', collection: 'notes' })
       });
       if (res.ok) {
         const data = await res.json();
-        setNotes(data.notes || []);
+        setNotes(data.data || []);
       }
     } catch (err) { console.error("Error fetching notes", err); }
   };
@@ -164,65 +169,62 @@ const App = () => {
   const handleSaveNotes = async (content, title = null) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API_BASE}/api/notes`, {
+      await fetch(`${API_BASE}/api/agents/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ notes: content, title })
+        body: JSON.stringify({ agent: 'storage', action: 'save', collection: 'notes', id: title || 'draft', data: content })
       });
-      fetchNotes(); // Refresh list
+      fetchNotes();
     } catch (err) { console.error("Error saving notes", err); }
   };
 
-  const fetchIntelligence = async (courseIdOverride = null) => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-
-      const targetCourseId = courseIdOverride || selectedCourseId;
-      // Skip course specific mastery if no course selected, or use a safe check
-      const masteryReq = targetCourseId
-        ? fetch(`${API_BASE}/api/progress/course/${targetCourseId}/mastery`, { headers })
-        : Promise.resolve({ json: () => Promise.resolve({}) }); // No-op if no course
-
-      const [masteryRes, gpaRes, scaleRes, breakdownRes] = await Promise.all([
-        masteryReq,
-        fetch(`${API_BASE}/api/assessment/gpa`, { headers }),
-        fetch(`${API_BASE}/api/assessment/gpa/scale`, { headers }),
-        fetch(`${API_BASE}/api/assessment/gpa/breakdown`, { headers })
-      ]);
-
-      const mData = await masteryRes.json().catch(() => ({}));
-      const gData = await gpaRes.json().catch(() => ({}));
-      const sData = await scaleRes.json().catch(() => ({}));
-      const bData = await breakdownRes.json().catch(() => ({}));
-
-      // Handle potential null/missing values and convert mastery probability to percentage
-      const aggregateMastery = mData?.aggregate_mastery ?? 0;
-      setMastery(Math.round(aggregateMastery * 100));
-
-      setGpaData(gData || { gpa: '0.0', letter_grade: 'N/A', courses: [] });
-      setGradeHistory(Array.isArray(gData?.courses) ? gData.courses : []);
-      setGradeScale(sData || {});
-      setGradingBreakdown(bData?.breakdown || bData || null);
-    } catch (err) { console.error("Error fetching intelligence data", err); }
+  const fetchIntelligence = () => {
+    fetchDashboardData();
   };
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+
+    if (savedUser && token) {
+      try {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+        if (user.role === 'tutor') setActiveTab('tutor');
+
+        // Fetch all consolidated data via Agent
+        fetchDashboardData();
+        fetchFeaturedAndCategories();
+        fetchNotes();
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
+        handleLogout();
+      } finally {
+        setIsAuthLoading(false);
+      }
+    } else {
+      setIsAuthLoading(false);
+      fetchFeaturedAndCategories();
+    }
+  }, []);
 
   const fetchFeaturedAndCategories = async () => {
     try {
-      const featuredRes = await fetch(`${API_BASE}/api/courses/featured`);
-      const catRes = await fetch(`${API_BASE}/api/courses/categories`);
+      const res = await fetch(`${API_BASE}/api/agents/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ agent: 'course', action: 'get_catalog' })
+      });
 
-      if (featuredRes.ok) {
-        const fData = await featuredRes.json();
-        // Backend returns list directly, frontend expects {courses: []} or just the list
-        setFeaturedCourses(Array.isArray(fData) ? fData : fData.courses || []);
-      }
-      if (catRes.ok) {
-        const cData = await catRes.json();
-        setCategories(Array.isArray(cData) ? cData : cData.categories || []);
+      if (res.ok) {
+        const data = await res.json();
+        setFeaturedCourses(data.featured || []);
+        setCategories(data.categories || []);
       }
     } catch (err) { console.error("Error fetching catalog meta", err); }
   };
@@ -232,49 +234,29 @@ const App = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return null;
-      const headers = { 'Authorization': `Bearer ${token}` };
-
-      let allUrl = `${API_BASE}/api/courses`;
-      const params = new URLSearchParams();
 
       const cat = category !== null ? category : activeCategory;
-      if (cat && cat !== 'All') params.append('category', cat);
-
       const q = search !== null ? search : searchQuery;
-      if (q) params.append('search', q);
 
-      const queryString = params.toString();
-      if (queryString) allUrl += `?${queryString}`;
+      const res = await fetch(`${API_BASE}/api/agents/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          agent: 'course',
+          action: 'list_all',
+          category: cat !== 'All' ? cat : null,
+          search: q
+        })
+      });
 
-      const [allRes, enrolledRes] = await Promise.all([
-        fetch(allUrl, { headers }),
-        fetch(`${API_BASE}/api/courses/enrolled`, { headers })
-      ]);
-
-      let activeCourseId = selectedCourseId;
-
-      if (allRes.ok) {
-        const data = await allRes.json();
-        setAllCourses(Array.isArray(data) ? data : data.courses || []);
+      if (res.ok) {
+        const data = await res.json();
+        setAllCourses(data.courses || []);
       }
-
-      if (enrolledRes.ok) {
-        const enrolled = await enrolledRes.json();
-        setEnrolledCourses(enrolled);
-
-        if (!activeCourseId && enrolled.length > 0) {
-          activeCourseId = enrolled[0].id;
-          setSelectedCourseId(activeCourseId);
-          fetchCourseDetail(activeCourseId);
-        }
-      }
-
-      return activeCourseId;
-
-    } catch (err) {
-      console.error("Error fetching courses", err);
-      return null;
-    }
+    } catch (err) { console.error("Error fetching courses", err); }
   };
 
   const fetchCourseDetail = async (id) => {
@@ -520,6 +502,7 @@ const App = () => {
             setActiveTab={setActiveTab}
             gradingBreakdown={gradingBreakdown}
             streak={streak}
+            nextTopic={nextTopic}
           />
         )}
         {activeTab === 'exercises' && <ExerciseHub courses={enrolledCourses} onStartAssessment={launchAssessment} aiLoading={aiLoading} />}
@@ -619,6 +602,8 @@ const App = () => {
                   setIsVoiceActive={setIsVoiceActive}
                   generateQuiz={generateQuiz}
                   courseId={selectedCourseId}
+                  ragStats={ragStats}
+                  fetchIntelligence={fetchIntelligence}
                 />
               )}
 

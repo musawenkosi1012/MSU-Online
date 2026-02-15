@@ -78,15 +78,19 @@ const MusaAIHub = ({ courses }) => {
     const fetchEnrolledCourses = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/courses/enrolled`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ agent: 'course', action: 'list_enrolled' })
             });
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setEnrolledCourses(data);
-                // If we don't have a course selected yet, pick the first one
-                if (data.length > 0 && !selectedCourse) {
-                    handleCourseSelect(data[0].id);
+            if (data.courses) {
+                setEnrolledCourses(data.courses);
+                if (data.courses.length > 0 && !selectedCourse) {
+                    handleCourseSelect(data.courses[0].id);
                 }
             }
         } catch (err) {
@@ -94,24 +98,14 @@ const MusaAIHub = ({ courses }) => {
         }
     };
 
-    // Keep state in sync with props
-    useEffect(() => {
-        if (courses?.length > 0) {
-            setEnrolledCourses(courses);
-            if (!selectedCourse) handleCourseSelect(courses[0].id);
-        }
-    }, [courses]);
-
     const handleCourseSelect = (courseId) => {
         setSelectedCourse(courseId);
-        // fetchTopics will be triggered by the useEffect below
     };
 
     // Fetch topics when course changes
     useEffect(() => {
         if (selectedCourse) {
             fetchTopics();
-            fetchRevisionQuestions();
         }
     }, [selectedCourse]);
 
@@ -119,41 +113,23 @@ const MusaAIHub = ({ courses }) => {
         if (!selectedCourse) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/courses/${selectedCourse}/outline`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ agent: 'course', action: 'get_outline', course_id: selectedCourse })
             });
             const data = await res.json();
-            const allTopics = [];
-
-            // Directly extract topics from the hydrated outline modules
-            const modules = data.modules || [];
-            for (const mod of modules) {
-                if (mod.topics) {
-                    allTopics.push(...mod.topics);
-                }
-            }
-
-            setTopics(allTopics);
-            if (allTopics.length > 0) {
-                setSelectedTopic(allTopics[0].topic_id || allTopics[0].id);
+            // Using the agent-processed flat_topics directly (Thin Client)
+            setTopics(data.flat_topics || []);
+            if (data.flat_topics?.length > 0) {
+                setSelectedTopic(data.flat_topics[0].topic_id || data.flat_topics[0].id);
             }
         } catch (err) {
             console.error("Error fetching topics:", err);
         }
-    };
-
-    const fetchRevisionQuestions = async () => {
-        if (!selectedCourse) return;
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/ai/revision-questions?course_id=${selectedCourse}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setRevisionQuestions(data);
-            }
-        } catch (err) { console.error("Error fetching revision questions", err); }
     };
 
     // Send message
@@ -166,31 +142,23 @@ const MusaAIHub = ({ courses }) => {
             return;
         }
 
-        console.log("Musa AI Context:", { selectedCourse, selectedTopic });
-
         const userMessage = inputValue.trim();
         setInputValue('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setIsLoading(true);
 
         try {
-            const endpoint = mode === 'chat' ? '/api/ai/chat' : '/api/ai/interactive';
-            const payload = mode === 'chat'
-                ? {
-                    message: userMessage,
-                    session_id: sessionId ? String(sessionId) : null,
-                    course_id: selectedCourse ? String(selectedCourse) : null,
-                    topic_id: selectedTopic ? String(selectedTopic) : null,
-                    allow_web_scrape: allowWebScrape
-                }
-                : {
-                    message: userMessage,
-                    session_id: sessionId ? String(sessionId) : null,
-                    course_id: selectedCourse ? String(selectedCourse) : null,
-                    topic_id: selectedTopic ? String(selectedTopic) : null
-                };
+            const payload = {
+                agent: 'intelligence',
+                mode: mode, // 'chat' or 'interactive'
+                message: userMessage,
+                session_id: sessionId ? String(sessionId) : null,
+                course_id: selectedCourse ? String(selectedCourse) : null,
+                topic_id: selectedTopic ? String(selectedTopic) : null,
+                allow_web_scrape: allowWebScrape
+            };
 
-            const res = await fetch(`${API_BASE}${endpoint}`, {
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -202,7 +170,7 @@ const MusaAIHub = ({ courses }) => {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.detail || data.message || "Request failed");
+                throw new Error(data.detail || data.message || "Agent request failed");
             }
 
             setMessages(prev => [...prev, {
@@ -224,9 +192,9 @@ const MusaAIHub = ({ courses }) => {
                 setSessionId(data.session_id);
             }
         } catch (err) {
-            console.error("Error sending message:", err);
+            console.error("Error sending message to agent:", err);
 
-            let errorMsg = "I'm having trouble connecting. Please try again.";
+            let errorMsg = "I'm having trouble connecting to Musa Intelligence. Please try again.";
             if (err.message) {
                 errorMsg = typeof err.message === 'object'
                     ? JSON.stringify(err.message)
@@ -330,18 +298,20 @@ const MusaAIHub = ({ courses }) => {
 
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/ai/interactive`, {
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${authToken}`
                 },
                 body: JSON.stringify({
+                    agent: 'intelligence',
+                    mode: 'interactive',
+                    action: 'hint',
                     message: "I need a hint please",
                     session_id: String(sessionId),
                     course_id: String(selectedCourse),
-                    topic_id: String(selectedTopic),
-                    action: "hint"
+                    topic_id: String(selectedTopic)
                 })
             });
 

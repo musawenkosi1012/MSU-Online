@@ -13,18 +13,19 @@ const MusaTutor = ({
     isVoiceActive,
     setIsVoiceActive,
     generateQuiz,
-    courseId
+    courseId,
+    ragStats
 }) => {
     const [isSyncing, setIsSyncing] = React.useState(false);
-    const [ragStats, setRagStats] = React.useState(null);
     const mediaRecorderRef = React.useRef(null);
     const audioChunksRef = React.useRef([]);
+
     const handleSyncKnowledge = async () => {
         if (!courseId) return;
         setIsSyncing(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/ai/index/course`, {
+            await fetch(`${API_BASE}/api/ai/index/course`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,32 +33,14 @@ const MusaTutor = ({
                 },
                 body: JSON.stringify({ course_id: courseId })
             });
-            const data = await res.json();
-            alert(`Sync Complete: ${data.indexed_count} chunks embedded.`);
-            fetchRagStats();
+            // Refresh dashboard data via the parent to update ragStats
+            if (typeof fetchIntelligence === 'function') fetchIntelligence();
         } catch (err) {
             console.error("Sync error", err);
         } finally {
             setIsSyncing(false);
         }
     };
-
-    const fetchRagStats = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/ai/rag/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            setRagStats(data);
-        } catch (err) {
-            console.error("Error fetching RAG stats", err);
-        }
-    };
-
-    React.useEffect(() => {
-        fetchRagStats();
-    }, []);
 
     // Initialize Server-side Voice Capture (STT)
     const startRecording = async () => {

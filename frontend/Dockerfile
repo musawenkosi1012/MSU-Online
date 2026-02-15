@@ -18,14 +18,26 @@ RUN npm run build
 # Production stage
 FROM nginxinc/nginx-unprivileged:stable-alpine-slim
 
+# Switch to root to create the user
+USER root
+
+# Create a non-root user with a specific UID (10014 for Choreo)
+RUN addgroup -g 10014 choreo && \
+    adduser -u 10014 -S choreo -G choreo
+
 # Copy custom nginx configuration
-# We will create this file next
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built assets from builder stage
-# Vite builds to 'dist' by default
+# Copy built assets from builder stage with correct ownership
 COPY --from=builder /app/dist /usr/share/nginx/html/
+RUN chown -R 10014:10014 /usr/share/nginx/html/ && \
+    chown -R 10014:10014 /var/cache/nginx && \
+    chown -R 10014:10014 /var/log/nginx && \
+    chown -R 10014:10014 /etc/nginx/conf.d
 
 EXPOSE 8080
+
+# Switch to the non-root user
+USER 10014
 
 CMD ["nginx", "-g", "daemon off;"]

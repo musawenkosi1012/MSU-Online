@@ -15,30 +15,8 @@ import { getMasteryBadge } from '../../shared/utils/mastery';
 import GradingBreakdown from '../assessment/GradingBreakdown';
 import { API_BASE } from '../../shared/utils/api';
 
-const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown, streak }) => {
+const StudentDashboard = ({ currentUser, gpaData, gradeHistory, gradeScale, modelStatus, mastery, courses, setActiveTab, gradingBreakdown, streak, nextTopic }) => {
     const { formatGpa, getGradeLabel } = useGpaScale();
-    const [nextTopic, setNextTopic] = React.useState(null);
-
-    React.useEffect(() => {
-        if (courses && courses.length > 0) {
-            fetchNextTopic(courses[0].id);
-        }
-    }, [courses]);
-
-    const fetchNextTopic = async (courseId) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            const res = await fetch(`${API_BASE}/api/ai/next-topic/${courseId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.status === 401) return;
-            const data = await res.json();
-            setNextTopic(data);
-        } catch (err) {
-            console.error("Error fetching next topic", err);
-        }
-    };
     return (
         <div className="edu-animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             {/* ... header ... */}

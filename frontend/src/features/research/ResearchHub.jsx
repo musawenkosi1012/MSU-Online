@@ -38,8 +38,13 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
         setCacheLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/research/cache`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ agent: 'research', action: 'get_cache' })
             });
             const data = await res.json();
             setResearchCache(data.cache || []);
@@ -53,9 +58,13 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
     const handleClearCache = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/research/cache`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+            await fetch(`${API_BASE}/api/agents/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ agent: 'research', action: 'clear_cache' })
             });
             setResearchCache([]);
         } catch (err) {
@@ -66,6 +75,7 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
     const handleSearch = (e) => {
         if (e) e.preventDefault();
         if (!query.trim()) return;
+        // Search trigger passes through the unified agent workflow via handleSendMessage
         handleSendMessage(query, true);
         setQuery('');
         setTimeout(fetchCache, 3000);
@@ -81,16 +91,16 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/api/research/deep-essay`, {
+            const res = await fetch(`${API_BASE}/api/agents/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ query: topic, style: 'academic' })
+                body: JSON.stringify({ agent: 'research', action: 'deep_essay', query: topic })
             });
 
-            if (!res.ok) throw new Error(`Server responded with ${res.status} `);
+            if (!res.ok) throw new Error(`Agent synthesis failed`);
 
             const data = await res.json();
 
@@ -100,7 +110,7 @@ const ResearchHub = ({ isResearchMode, setIsResearchMode, handleSendMessage, cha
                 setEssayData(data);
             }
         } catch (err) {
-            console.error("Deep essay error:", err);
+            console.error("Deep essay agent error:", err);
             setEssayError(err.message || "Failed to generate essay. Please try again.");
         } finally {
             setEssayLoading(false);

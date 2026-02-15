@@ -1,0 +1,13 @@
+apiVersion: 1.1
+component:
+  type: web-app
+  name: msu-online-frontend
+  build:
+    context: frontend
+    dockerfile: Dockerfile
+  endpoints:
+    - name: frontend-ui
+      port: 8080
+      type: SPA
+      network:
+        visibility: Public

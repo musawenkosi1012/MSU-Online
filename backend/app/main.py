@@ -87,6 +87,10 @@ def create_app() -> FastAPI:
     app.include_router(tutor_router, prefix="/api/content", tags=["Tutor Content Management"])
     app.include_router(tutor_router, prefix="/api/tutor", tags=["Tutor Dashboard"], include_in_schema=False)
     app.include_router(settings_router, prefix="/api/settings", tags=["User Settings"])
+    
+    # Static UI / Agents System
+    from app.features.agent_router import router as agent_router
+    app.include_router(agent_router)
 
     return app
 
